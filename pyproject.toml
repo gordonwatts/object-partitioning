@@ -6,7 +6,7 @@ readme = "README.md"
 requires-python = ">=3.8"
 authors = [{ name = "Gordon Watts", email = "gwatts@uw.edu" }]
 
-dependencies = []
+dependencies = ["typer"]
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-cov", "flake8", "black", "coverage"]
@@ -22,3 +22,6 @@ include = ["src/object_partitioning/**", "tests/**"]
 
 [tool.hatch.build.targets.wheel]
 include = ["src/object_partitioning/**"]
+
+[project.scripts]
+object-partitioning = "object_partitioning.partition:app"
