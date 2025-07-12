@@ -15,9 +15,15 @@ def main(
         "-o",
         help="Output file name for the object counts parquet file.",
     ),
+    n_files: int = typer.Option(
+        1,
+        "--n-files",
+        "-n",
+        help="Number of files to use (0 for all files)",
+    ),
 ):
     """object-partitioning CLI is working!"""
-    counts = collect_object_counts(ds_name)
+    counts = collect_object_counts(ds_name, n_files=n_files)
     ak.to_parquet(counts, output_file)
 
 

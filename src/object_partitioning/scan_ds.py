@@ -3,7 +3,7 @@ from servicex import Sample, ServiceXSpec, dataset, deliver
 from servicex_analysis_utils import to_awk
 
 
-def collect_object_counts(ds_name: str):
+def collect_object_counts(ds_name: str, n_files: int = 1):
 
     # Build the query to count objects per event
     query = FuncADLQueryPHYSLITE().Select(
@@ -15,7 +15,11 @@ def collect_object_counts(ds_name: str):
         }
     )
 
-    # Run the query on a single file for a fast result (remove NFiles for full sample)
+    def _nfiles_value(n_files):
+        if n_files == 0:
+            return None
+        return n_files
+
     result = to_awk(
         deliver(
             ServiceXSpec(
@@ -23,13 +27,14 @@ def collect_object_counts(ds_name: str):
                     Sample(
                         Name="object_counts",
                         Dataset=dataset.Rucio(ds_name),
-                        NFiles=1,
+                        NFiles=_nfiles_value(n_files),
                         Query=query,  # type: ignore
                     )
                 ]
             ),
         )
     )
+    return result["object_counts"]
 
-    counts = result["object_counts"]
-    return counts
+
+
