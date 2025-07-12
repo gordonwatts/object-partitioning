@@ -1,7 +1,7 @@
-# object_partitioning
+# atlas_object_partitioning
 
-[![PyPI - Version](https://img.shields.io/pypi/v/object-partitioning.svg)](https://pypi.org/project/object-partitioning)
-[![PyPI - Python Version](https://img.shields.io/pypi/pyversions/object-partitioning.svg)](https://pypi.org/project/object-partitioning)
+![PyPI - Version](https://img.shields.io/pypi/v/atlas-object-partitioning.svg)
+![PyPI - Python Version](https://img.shields.io/pypi/pyversions/atlas-object-partitioning.svg)
 
 -----
 
@@ -13,9 +13,9 @@
 ## Installation
 
 ```console
-pip install object-partitioning
+pip install atlas-object-partitioning
 ```
 
 ## License
 
-`object-partitioning` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.
+`atlas-object-partitioning` is distributed under the terms of the [MIT](https://spdx.org/licenses/MIT.html) license.

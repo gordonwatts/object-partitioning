@@ -1,7 +1,7 @@
 # Object Partitioning
 
-[![PyPI version](https://badge.fury.io/py/object-partitioning.svg)](https://badge.fury.io/py/object-partitioning)
-[![Build Status](https://github.com/yourusername/object-partitioning/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/object-partitioning/actions)
+![PyPI version](https://badge.fury.io/py/atlas-object-partitioning.svg)
+[![Build Status](https://github.com/yourusername/atlas-object-partitioning/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/atlas-object-partitioning/actions)
 
 A Python package to help understand partitioning by objects. Works only on ATLAS xAOD format files (PHYS, PHYSLITE, etc.).
 
@@ -12,22 +12,22 @@ Writes a `parquet` file with per-event data.
 Install via pip:
 
 ```bash
-pip install object-partitioning
+pip install atlas-object-partitioning
 ```
 
 Or install from source:
 
 ```bash
-git clone https://github.com/yourusername/object-partitioning.git
-cd object-partitioning
+git clone https://github.com/yourusername/atlas-object-partitioning.git
+cd atlas-object-partitioning
 pip install .
 ```
 
 ## Usage
 
 ```python
-from object_partitioning.partition import partition_objects
-from object_partitioning.scan_ds import scan_dataset
+from atlas_object_partitioning.partition import partition_objects
+from atlas_object_partitioning.scan_ds import scan_dataset
 
 # Example: Partition a list of objects
 data = [...]  # your data here
@@ -37,7 +37,7 @@ partitions = partition_objects(data, num_partitions=4)
 results = scan_dataset('object_counts.parquet')
 ```
 
-See the [documentation](https://github.com/yourusername/object-partitioning) for more details and advanced usage.
+See the [documentation](https://github.com/yourusername/atlas-object-partitioning) for more details and advanced usage.
 
 ## Contributing
 

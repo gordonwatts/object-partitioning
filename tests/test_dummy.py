@@ -4,7 +4,7 @@ import os
 sys.path.insert(
     0, os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "src"))
 )
-from object_partitioning.core import dummy_function
+from atlas_object_partitioning.core import dummy_function
 
 
 def test_dummy_function():

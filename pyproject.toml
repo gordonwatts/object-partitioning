@@ -1,5 +1,5 @@
 [project]
-name = "object_partitioning"
+name = "atlas-object-partitioning"
 version = "0.0.1"
 description = "Object partitioning package."
 readme = "README.md"
@@ -24,10 +24,10 @@ dependencies = []
 dependencies = ["pytest", "pytest-cov", "flake8", "black", "coverage"]
 
 [tool.hatch.build.targets.sdist]
-include = ["src/object_partitioning/**", "tests/**"]
+include = ["src/atlas_object_partitioning/**", "tests/**"]
 
 [tool.hatch.build.targets.wheel]
-include = ["src/object_partitioning/**"]
+include = ["src/atlas_object_partitioning/**"]
 
 [project.scripts]
-object-partitioning = "object_partitioning.partition:app"
+atlas-object-partitioning = "atlas_object_partitioning.partition:app"
