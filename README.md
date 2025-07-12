@@ -1,7 +1,7 @@
 # Object Partitioning
 
 ![PyPI version](https://badge.fury.io/py/atlas-object-partitioning.svg)
-[![Build Status](https://github.com/yourusername/atlas-object-partitioning/actions/workflows/ci.yml/badge.svg)](https://github.com/yourusername/atlas-object-partitioning/actions)
+[![Build Status](https://github.com/gordonwatts/object-partitioning/actions/workflows/publish-to-pypi.yml/badge.svg)](https://github.com/gordonwatts/object-partitioning/actions)
 
 A Python package to help understand partitioning by objects. Works only on ATLAS xAOD format files (PHYS, PHYSLITE, etc.).
 
