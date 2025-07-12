@@ -37,7 +37,7 @@ uvx atlas-object-partitioning --help
 Or install from **source**:
 
 ```bash
-git clone https://github.com/yourusername/atlas-object-partitioning.git
+git clone https://github.com/gordonwatts/object-partitioning.git
 cd atlas-object-partitioning
 pip install .
 ```
