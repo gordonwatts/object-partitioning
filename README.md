@@ -49,7 +49,7 @@ You'll need a `servicex.yaml` file with a valid token to use the ServiceX backen
 From the **command line**.
 
 * Use `--help` to see all options
-* Specify a rucio dataset, for example, `tlas-object-partitioning mc23_13p6TeV:mc23_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYSLITE.e8514_s4369_r16083_p6697`
+* Specify a rucio dataset, for example, `atlas-object-partitioning mc23_13p6TeV:mc23_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYSLITE.e8514_s4369_r16083_p6697`
 * Use the `-n` option to specify how many files in the dataset to run over. By default 1, specify `0` to run on everything. Some datasets are quite large. Feel free to start the transform, then re-run the same command to have it pick up where it left off. See the [dashboard](https://servicex.af.uchicago.edu/dashboard) to monitor status.
 
 If you wish, you can also use it as a **library**:
