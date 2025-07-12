@@ -4,10 +4,15 @@
 #   - PYPI_PASSWORD (or PYPI_API_TOKEN for token-based auth)
 
 name: pypi-publish
+
 on:
   push:
     tags:
       - "*"
+
+permissions:
+  id-token: write # Required for OIDC token
+  contents: read # Required to checkout code
 
 jobs:
   build-and-publish:
