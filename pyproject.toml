@@ -1,0 +1,24 @@
+[project]
+name = "object_partitioning"
+version = "0.0.1"
+description = "Object partitioning package."
+readme = "README.md"
+requires-python = ">=3.8"
+authors = [{ name = "Gordon Watts", email = "gwatts@uw.edu" }]
+
+dependencies = []
+
+[project.optional-dependencies]
+test = ["pytest", "pytest-cov", "flake8", "black", "coverage"]
+
+[tool.hatch.envs.default]
+dependencies = []
+
+[tool.hatch.envs.dev]
+dependencies = ["pytest", "pytest-cov", "flake8", "black", "coverage"]
+
+[tool.hatch.build.targets.sdist]
+include = ["src/object_partitioning/**", "tests/**"]
+
+[tool.hatch.build.targets.wheel]
+include = ["src/object_partitioning/**"]
