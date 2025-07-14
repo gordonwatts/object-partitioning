@@ -130,3 +130,4 @@ venv.bak/
 cython_debug/
 
 *.parquet
+servicex.yaml

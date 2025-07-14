@@ -21,9 +21,24 @@ def main(
         "-n",
         help="Number of files to use (0 for all files)",
     ),
+    servicex_name: str = typer.Option(
+        None,
+        "--servicex-name",
+        help="Name of the ServiceX instance (default taken from `servicex.yaml` file)",
+    ),
+    ignore_cache: bool = typer.Option(
+        False,
+        "--ignore-cache",
+        help="Ignore servicex local cache and force fresh data SX query.",
+    ),
 ):
     """atlas-object-partitioning CLI is working!"""
-    counts = collect_object_counts(ds_name, n_files=n_files)
+    counts = collect_object_counts(
+        ds_name,
+        n_files=n_files,
+        servicex_name=servicex_name,
+        ignore_local_cache=ignore_cache,
+    )
     ak.to_parquet(counts, output_file)
 
 
