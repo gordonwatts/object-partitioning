@@ -1,7 +1,10 @@
 from typing import Optional
+
 from func_adl_servicex_xaodr25 import FuncADLQueryPHYSLITE
-from servicex import Sample, ServiceXSpec, dataset, deliver
 from servicex_analysis_utils import to_awk
+
+from atlas_object_partitioning.local_mode import build_sx_spec
+from atlas_object_partitioning.local_mode import deliver
 
 
 def collect_object_counts(
@@ -26,20 +29,16 @@ def collect_object_counts(
             return None
         return n_files
 
-    result = to_awk(
-        deliver(
-            ServiceXSpec(
-                Sample=[
-                    Sample(
-                        Name="object_counts",
-                        Dataset=dataset.Rucio(ds_name),
-                        NFiles=_nfiles_value(n_files),
-                        Query=query,  # type: ignore
-                    )
-                ]
-            ),
-            servicex_name=servicex_name,
-            ignore_local_cache=ignore_local_cache,
-        )
+    # Next, deliver the data
+    spec, backend_name, adaptor = build_sx_spec(
+        query,
+        ds_name,
+        backend_name=servicex_name,
+        n_files=_nfiles_value(n_files),
+        title="object_counts",
     )
+    r = deliver(spec, backend_name, adaptor=adaptor)
+
+    result = to_awk(r)
+
     return result["object_counts"]
