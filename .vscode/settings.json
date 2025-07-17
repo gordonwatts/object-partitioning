@@ -1,6 +1,8 @@
 {
     "cSpell.words": [
         "allhad",
+        "cernbox",
+        "Codegen",
         "DAOD",
         "hdamp",
         "nfiles",
@@ -8,6 +10,7 @@
         "pyarrow",
         "Rucio",
         "sdist",
+        "sslhep",
         "ttbar",
         "typer",
         "xaodr"

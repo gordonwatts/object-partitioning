@@ -65,13 +65,13 @@ def install_sx_local():
     codegen_name = "atlasr22-local"
     if None in (LocalXAODCodegen, DockerScienceImage, SXLocalAdaptor):
         raise ImportError("servicex-local is not installed or could not be imported.")
-    codegen = LocalXAODCodegen()
+    codegen = LocalXAODCodegen()  # type: ignore
     science_runner = DockerScienceImage(
         "sslhep/servicex_func_adl_xaod_transformer:25.2.41",
-    )
+    )  # type: ignore
     adaptor = SXLocalAdaptor(
         codegen, science_runner, codegen_name, "http://localhost:5001"
-    )
+    )  # type: ignore
     logging.info(f"Using local ServiceX endpoint: codegen {codegen_name}")
     return codegen_name, "local-backend", adaptor
 
