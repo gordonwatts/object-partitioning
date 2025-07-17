@@ -16,6 +16,7 @@ dependencies = [
 
 [project.optional-dependencies]
 test = ["pytest", "pytest-cov", "flake8", "black", "coverage"]
+local = ["servicex-local", "func_adl_xAOD"]
 
 [tool.hatch.envs.default]
 dependencies = []
