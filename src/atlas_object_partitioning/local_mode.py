@@ -67,7 +67,8 @@ def install_sx_local():
         raise ImportError("servicex-local is not installed or could not be imported.")
     codegen = LocalXAODCodegen()
     science_runner = DockerScienceImage(
-        "sslhep/servicex_func_adl_xaod_transformer:25.2.41"
+        "sslhep/servicex_func_adl_xaod_transformer:25.2.41",
+        memory_limit=1,
     )
     adaptor = SXLocalAdaptor(
         codegen, science_runner, codegen_name, "http://localhost:5001"
