@@ -1,4 +1,5 @@
-# atlas_object_partitioning package
-from .core import *
-from .partition import *
-from .scan_ds import *
+"""atlas_object_partitioning package."""
+
+from .__about__ import __version__
+
+__all__ = ["__version__"]
