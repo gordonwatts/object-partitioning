@@ -10,6 +10,7 @@
         "pyarrow",
         "Rucio",
         "sdist",
+        "searchsorted",
         "sslhep",
         "ttbar",
         "typer",
