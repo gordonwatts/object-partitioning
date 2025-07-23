@@ -1,7 +1,10 @@
-import awkward as ak
 import typer
 
 from atlas_object_partitioning.scan_ds import collect_object_counts
+from atlas_object_partitioning.histograms import (
+    compute_bin_boundaries,
+    write_bin_boundaries_yaml,
+)
 
 app = typer.Typer()
 
@@ -39,7 +42,10 @@ def main(
         servicex_name=servicex_name,
         ignore_local_cache=ignore_cache,
     )
-    ak.to_parquet(counts, output_file)
+    # ak.to_parquet(counts, output_file)
+
+    simple_boundaries = compute_bin_boundaries(counts)
+    write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")
 
 
 if __name__ == "__main__":

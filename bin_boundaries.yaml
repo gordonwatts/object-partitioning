@@ -1,0 +1,13 @@
+axes:
+  n_electrons:
+  - 1
+  - 1
+  - 2
+  n_jets:
+  - 5
+  - 8
+  - 10
+  n_muons:
+  - 1
+  - 1
+  - 2
