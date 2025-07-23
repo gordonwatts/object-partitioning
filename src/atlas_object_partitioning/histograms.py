@@ -21,6 +21,9 @@ def _compute_boundaries(values: ak.Array) -> List[int]:
         return []
     min_val = int(ak.min(values))
     max_val = int(ak.max(values))
+    if min_val == max_val:
+        # All values are the same, return [min_val, min_val+1]
+        return [min_val, min_val + 1]
     bins = np.arange(min_val, max_val + 2)
     hist, edges = np.histogram(values, bins=bins)
     cdf = np.cumsum(hist)
@@ -29,7 +32,8 @@ def _compute_boundaries(values: ak.Array) -> List[int]:
     for i in range(1, 4):
         idx = int(np.searchsorted(cdf, quarter * i))
         boundaries.append(int(edges[idx + 1]))
-    return boundaries
+    # Always return [min, ...boundaries..., max+1]
+    return [min_val] + boundaries + [max_val + 1]
 
 
 def compute_bin_boundaries(data: ak.Array) -> Dict[str, List[int]]:
