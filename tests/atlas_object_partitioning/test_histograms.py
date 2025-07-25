@@ -1,8 +1,13 @@
 import yaml
 import awkward as ak
+import numpy as np
 from atlas_object_partitioning.histograms import (
     compute_bin_boundaries,
     write_bin_boundaries_yaml,
+    build_nd_histogram,
+    write_histogram_pickle,
+    load_histogram_pickle,
+    top_bins,
 )
 
 
@@ -34,3 +39,26 @@ def test_compute_bin_boundaries_all_zero_and_one():
     data = ak.Array({"n_muons": [0, 0, 1, 0]})
     boundaries = compute_bin_boundaries(data)
     assert boundaries["n_muons"] == [0, 1, 2]
+
+
+def test_histogram_build_and_io(tmp_path):
+    data = ak.Array(
+        {
+            "n_muons": [0, 1, 1, 2, 0],
+            "n_electrons": [1, 0, 1, 2, 1],
+        }
+    )
+    bounds = compute_bin_boundaries(data)
+    hist = build_nd_histogram(data, bounds)
+    assert hist.view().sum() == len(data)
+
+    file = tmp_path / "hist.pkl"
+    write_histogram_pickle(hist, file)
+    hist2 = load_histogram_pickle(file)
+
+    assert hist2.axes[0].size == hist.axes[0].size
+    assert np.allclose(hist2.view(), hist.view())
+    assert hist2.view().sum() == len(data)
+
+    top = top_bins(hist2, n=1)[0]
+    assert "count" in top and "fraction" in top
