@@ -12,6 +12,7 @@ dependencies = [
     "servicex_analysis_utils",
     "jinja2",
     "pyarrow",
+    "hist",
 ]
 
 [project.optional-dependencies]

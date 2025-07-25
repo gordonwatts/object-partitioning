@@ -4,6 +4,11 @@ from atlas_object_partitioning.scan_ds import collect_object_counts
 from atlas_object_partitioning.histograms import (
     compute_bin_boundaries,
     write_bin_boundaries_yaml,
+    build_nd_histogram,
+    write_histogram_pickle,
+    top_bins,
+    bottom_bins,
+    print_bin_table,
 )
 
 app = typer.Typer()
@@ -46,6 +51,14 @@ def main(
 
     simple_boundaries = compute_bin_boundaries(counts)
     write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")
+
+    hist = build_nd_histogram(counts, simple_boundaries)
+    write_histogram_pickle(hist, "histogram.pkl")
+
+    top = top_bins(hist, n=10)
+    bottom = bottom_bins(hist, n=10)
+    print_bin_table(top, "Top 10 bins")
+    print_bin_table(bottom, "Least 10 bins")
 
 
 if __name__ == "__main__":
