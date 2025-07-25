@@ -50,15 +50,15 @@ def test_histogram_build_and_io(tmp_path):
     )
     bounds = compute_bin_boundaries(data)
     hist = build_nd_histogram(data, bounds)
-    assert hist.view().sum() == len(data)
+    assert hist.view().sum() == len(data)  # type: ignore
 
     file = tmp_path / "hist.pkl"
-    write_histogram_pickle(hist, file)
+    write_histogram_pickle(hist, file)  # type: ignore
     hist2 = load_histogram_pickle(file)
 
     assert hist2.axes[0].size == hist.axes[0].size
-    assert np.allclose(hist2.view(), hist.view())
-    assert hist2.view().sum() == len(data)
+    assert np.allclose(hist2.view(), hist.view())  # type: ignore
+    assert hist2.view().sum() == len(data)  # type: ignore
 
     top = top_bins(hist2, n=1)[0]
     assert "count" in top and "fraction" in top

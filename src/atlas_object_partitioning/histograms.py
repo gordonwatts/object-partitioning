@@ -1,13 +1,13 @@
-import numpy as np
-import awkward as ak
-from typing import Dict, List
-from pydantic import BaseModel
-import yaml
-from typing import Tuple
-from rich.table import Table
-from rich.console import Console
-from hist import BaseHist, Hist
 import pickle
+from typing import Dict, List
+
+import awkward as ak
+import numpy as np
+import yaml
+from hist import BaseHist, Hist
+from pydantic import BaseModel
+from rich.console import Console
+from rich.table import Table
 
 
 def _compute_boundaries(values: ak.Array) -> List[int]:
@@ -150,14 +150,14 @@ def print_bin_table(records: List[Dict[str, object]], title: str) -> None:
     """Print summary table for ``records`` using ``rich``."""
     if not records:
         return
-    axes = list(records[0]["bin"].keys())
+    axes = list(records[0]["bin"].keys())  # type: ignore
     table = Table(title=title)
     for ax in axes:
         table.add_column(ax)
     table.add_column("count", justify="right")
     table.add_column("fraction", justify="right")
     for r in records:
-        row = [f"[{lo}, {hi})" for lo, hi in r["bin"].values()]
+        row = [f"[{lo}, {hi})" for lo, hi in r["bin"].values()]  # type: ignore
         row.append(f"{r['count']:,}")
         row.append(f"{r['fraction']:.3f}")
         table.add_row(*row)
