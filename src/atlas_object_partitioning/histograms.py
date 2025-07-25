@@ -6,7 +6,7 @@ import yaml
 from typing import Tuple
 from rich.table import Table
 from rich.console import Console
-from hist import Hist
+from hist import BaseHist, Hist
 import pickle
 
 
@@ -63,9 +63,7 @@ def write_bin_boundaries_yaml(boundaries: Dict[str, List[int]], file_path: str) 
         yaml.safe_dump(data.model_dump(), f)
 
 
-def build_nd_histogram(
-    data: ak.Array, boundaries: Dict[str, List[int]]
-) -> Hist:
+def build_nd_histogram(data: ak.Array, boundaries: Dict[str, List[int]]) -> BaseHist:
     """Build an n-dimensional histogram using ``boundaries`` and return a
     :class:`hist.Hist` object.
 
@@ -86,8 +84,8 @@ def build_nd_histogram(
     h_builder = Hist.new
     for ax in axes:
         h_builder = h_builder.Var(boundaries[ax], name=ax, label=ax)
-    h_builder = h_builder.Int64()
-    h = h_builder()
+    h_builder = h_builder.Int64()  # type: ignore
+    h = h_builder  # type: BaseHist
 
     # Fill with event counts
     fill_dict = {ax: ak.to_numpy(data[ax]) for ax in axes}
@@ -122,7 +120,10 @@ def _sorted_bin_records(
         order = order[::-1]
     records = []
     edges = [np.asarray(ax.edges) for ax in hist.axes]
-    axes_names = [ax.name if ax.name is not None else f"axis_{i}" for i, ax in enumerate(hist.axes)]
+    axes_names = [
+        ax.name if ax.name is not None else f"axis_{i}"
+        for i, ax in enumerate(hist.axes)
+    ]
     for idx in order[:n]:
         count = int(flat[idx])
         frac = 0.0 if total == 0 else float(count) / float(total)
@@ -157,8 +158,7 @@ def print_bin_table(records: List[Dict[str, object]], title: str) -> None:
     table.add_column("fraction", justify="right")
     for r in records:
         row = [f"[{lo}, {hi})" for lo, hi in r["bin"].values()]
-        row.append(str(r["count"]))
+        row.append(f"{r['count']:,}")
         row.append(f"{r['fraction']:.3f}")
         table.add_row(*row)
     Console().print(table)
-
