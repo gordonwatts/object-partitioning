@@ -95,7 +95,12 @@ def build_nd_histogram(data: ak.Array, boundaries: Dict[str, List[int]]) -> Base
 
 
 def write_histogram_pickle(hist: Hist, file_path: str) -> None:
-    """Persist the histogram to disk using :mod:`pickle`."""
+    """Persist the histogram to disk using :mod:`pickle`.
+    This currently is the most efficient way to store the histogram
+    according to the histogram authors. A new serialization method that
+    should be cross-program (e.g. ROOT should be able to read it) is
+    coming.
+    """
     with open(file_path, "wb") as f:
         pickle.dump(hist, f)
 
