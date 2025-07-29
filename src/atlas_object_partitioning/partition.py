@@ -22,7 +22,8 @@ def main(
         None,
         "--output",
         "-o",
-        help="Output file name for the object counts parquet file. If not provided, will not save to file.",
+        help="Output file name for the object counts parquet file. If not provided, will not "
+        "save to file.",
     ),
     n_files: int = typer.Option(
         1,
