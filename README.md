@@ -5,7 +5,18 @@
 
 A Python package to help understand partitioning by objects. Works only on ATLAS xAOD format files (PHYS, PHYSLITE, etc.).
 
-Writes a `parquet` file with per-event data.
+Writes a `parquet` file with per-event data, a `bin_boundaries.yaml` files, and a python pickle file with an n-dimensional histogram.
+
+- Each *axis* is a count of PHYSLITE objects (muons, electrons, jets, etc).
+- Looks at each axis and tries to divide the counts into 4 bins of equal #s of events.
+- Then sub-divides each bin of axis 1 by axis 2 and axis 3 etc (making a
+    n-dimensional histogram).
+- Saves the binning and histogram to files.
+- Prints out a table with the 10 largest and smallest bins.
+
+Use `--help` to see available options.
+
+
 
 ## Installation
 
@@ -15,7 +26,7 @@ Install via **pip**:
 pip install atlas-object-partitioning
 ```
 
-Install via `uv`:
+Run via `uv`:
 
 * If you don't have the [`uv` tool installed](https://docs.astral.sh/uv/getting-started/installation/), it is highly recommended as a way to quickly install local versions of the code without having to build custom environments, etc.
 
@@ -28,7 +39,7 @@ atlas-object-partitioning --help
 
 Update it to the most recent version with `uv tool upgrade atlas-object-partitioning`.
 
-Or running it in an **ephemeral environment**:
+Or running it in an **ephemeral environment** (recommended for intermittent or one-off use):
 
 ```bash
 uvx atlas-object-partitioning --help
