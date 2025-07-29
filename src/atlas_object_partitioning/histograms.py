@@ -94,7 +94,7 @@ def build_nd_histogram(data: ak.Array, boundaries: Dict[str, List[int]]) -> Base
     return h
 
 
-def write_histogram_pickle(hist: Hist, file_path: str) -> None:
+def write_histogram_pickle(hist: BaseHist, file_path: str) -> None:
     """Persist the histogram to disk using :mod:`pickle`.
     This currently is the most efficient way to store the histogram
     according to the histogram authors. A new serialization method that
@@ -113,7 +113,7 @@ def load_histogram_pickle(file_path: str) -> Hist:
 
 
 def _sorted_bin_records(
-    hist: Hist,
+    hist: BaseHist,
     n: int,
     ascending: bool = False,
 ) -> List[Dict[str, object]]:
@@ -141,12 +141,12 @@ def _sorted_bin_records(
     return records
 
 
-def top_bins(hist: Hist, n: int = 10) -> List[Dict[str, object]]:
+def top_bins(hist: BaseHist, n: int = 10) -> List[Dict[str, object]]:
     """Return summary information for the top ``n`` populated bins."""
     return _sorted_bin_records(hist, n, ascending=False)
 
 
-def bottom_bins(hist: Hist, n: int = 10) -> List[Dict[str, object]]:
+def bottom_bins(hist: BaseHist, n: int = 10) -> List[Dict[str, object]]:
     """Return summary information for the least ``n`` populated bins."""
     return _sorted_bin_records(hist, n, ascending=True)
 
