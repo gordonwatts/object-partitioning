@@ -23,6 +23,7 @@ def collect_object_counts(
             "n_muons": e.Muons().Count(),
             "n_taus": e.TauJets("AnalysisTauJets").Count(),
             "n_photons": e.Photons().Count(),
+            "met": e.MissingET().First().met() / 1000.0,
         }
     )
 

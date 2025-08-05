@@ -22,6 +22,7 @@ The following are the axes:
 - Muons (`AnalysisMuons`)
 - Taus (`AnalysisTauJets`)
 - Photons (`AnalysisPhotons`)
+- MissingET (`MET_Core_AnalysisMET`) - In ATLAS,`met` is analysis dependent. This is just the first object in the `MissingET` container, with `met()` called on that object.
 
 Use `--help` to see available options.
 
