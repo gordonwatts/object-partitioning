@@ -29,6 +29,7 @@ Use `--help` to see available options.
 An example output:
 
 ```python
+$ atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 -n 10
 ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━┓
 ┃ n_jets     ┃ n_large_jets ┃ n_electrons ┃ n_muons    ┃ n_taus     ┃ n_photons  ┃ met          ┃ count ┃ fraction ┃
 ┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━┩
