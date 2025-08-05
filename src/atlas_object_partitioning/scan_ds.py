@@ -18,6 +18,7 @@ def collect_object_counts(
     query = FuncADLQueryPHYSLITE().Select(
         lambda e: {
             "n_jets": e.Jets().Count(),
+            "n_large_jets": e.Jets("AnalysisLargeRJets").Count(),
             "n_electrons": e.Electrons().Count(),
             "n_muons": e.Muons().Count(),
             "n_taus": e.TauJets("AnalysisTauJets").Count(),
