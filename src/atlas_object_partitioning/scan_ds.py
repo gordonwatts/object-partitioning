@@ -20,7 +20,8 @@ def collect_object_counts(
             "n_jets": e.Jets().Count(),
             "n_electrons": e.Electrons().Count(),
             "n_muons": e.Muons().Count(),
-            # "n_taus": e.TauJets().Count(),
+            "n_taus": e.TauJets("AnalysisTauJets").Count(),
+            "n_photons": e.Photons().Count(),
         }
     )
 
