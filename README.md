@@ -14,9 +14,16 @@ Writes a `parquet` file with per-event data, a `bin_boundaries.yaml` files, and 
 - Saves the binning and histogram to files.
 - Prints out a table with the 10 largest and smallest bins.
 
+The following are the axes:
+
+- Jets (`AnalysisJets`)
+- Large-R Jets (`AnalysisLargeRJets`)
+- Electrons (`AnalysisElectrons`)
+- Muons (`AnalysisMuons`)
+- Taus (`AnalysisTauJets`)
+- Photons (`AnalysisPhotons`)
+
 Use `--help` to see available options.
-
-
 
 ## Installation
 
