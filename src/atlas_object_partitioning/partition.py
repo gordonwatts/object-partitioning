@@ -1,3 +1,4 @@
+from typing import List
 import awkward as ak
 import typer
 
@@ -41,6 +42,12 @@ def main(
         "--ignore-cache",
         help="Ignore servicex local cache and force fresh data SX query.",
     ),
+    ignore_axes: List[str] = typer.Option(
+        [],
+        "--ignore-axes",
+        help="List of axes to ignore when computing bin boundaries. Specify repeatedly for "
+        "multiple axes.",
+    ),
 ):
     """Use counts of PHYSLITE objects in a rucio dataset to determine skim binning.
 
@@ -64,7 +71,7 @@ def main(
     if output_file is not None:
         ak.to_parquet(counts, output_file)
 
-    simple_boundaries = compute_bin_boundaries(counts)
+    simple_boundaries = compute_bin_boundaries(counts, ignore_axes=ignore_axes)
     write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")
 
     hist = build_nd_histogram(counts, simple_boundaries)

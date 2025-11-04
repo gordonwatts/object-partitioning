@@ -44,10 +44,17 @@ def _compute_boundaries(values: ak.Array) -> List[int]:
     return boundaries
 
 
-def compute_bin_boundaries(data: ak.Array) -> Dict[str, List[int]]:
+def compute_bin_boundaries(
+    data: ak.Array, ignore_axes: List[str] = []
+) -> Dict[str, List[int]]:
     """Compute bin boundaries for all axes in the awkward array."""
+    missing = [ax for ax in ignore_axes if ax not in data.fields]
+    if len(missing) > 0:
+        raise ValueError(f"Cannot ignore missing axes: {', '.join(missing)}")
+
     result: Dict[str, List[int]] = {}
-    for axis in data.fields:
+    good_data_fields = [ax for ax in data.fields if ax not in ignore_axes]
+    for axis in good_data_fields:
         result[axis] = _compute_boundaries(data[axis])
     return result
 
