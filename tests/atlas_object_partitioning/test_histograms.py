@@ -1,3 +1,4 @@
+import pytest
 import yaml
 import awkward as ak
 import numpy as np
@@ -62,3 +63,29 @@ def test_histogram_build_and_io(tmp_path):
 
     top = top_bins(hist2, n=1)[0]
     assert "count" in top and "fraction" in top
+
+
+def test_compute_bin_boundaries_ignore_axes():
+    data = ak.Array(
+        {
+            "n_muons": [0, 1, 1, 2, 2, 2, 3, 3, 4, 4],
+            "n_electrons": [1, 2, 1, 0, 1, 2, 3, 3, 2, 0],
+            "n_jets": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        }
+    )
+    boundaries = compute_bin_boundaries(data, ignore_axes=["n_jets"])
+    assert boundaries["n_muons"] == [0, 2, 3, 4, 5]
+    assert boundaries["n_electrons"] == [0, 2, 3, 4]
+    assert "n_jets" not in boundaries
+
+
+def test_compute_bin_boundaries_ignore_bad_axis():
+    data = ak.Array(
+        {
+            "n_muons": [0, 1, 1, 2, 2, 2, 3, 3, 4, 4],
+            "n_electrons": [1, 2, 1, 0, 1, 2, 3, 3, 2, 0],
+            "n_jets": [0, 1, 0, 1, 0, 1, 0, 1, 0, 1],
+        }
+    )
+    with pytest.raises(ValueError):
+        compute_bin_boundaries(data, ignore_axes=["n_jets", "n_photons"])
