@@ -8,7 +8,7 @@ A Python package to help understand partitioning by objects. Works only on ATLAS
 Writes a `parquet` file with per-event data, a `bin_boundaries.yaml` files, and a python pickle file with an n-dimensional histogram.
 
 - Each *axis* is a count of PHYSLITE objects (muons, electrons, jets, etc).
-- Looks at each axis and tries to divide the counts into 4 bins of equal #s of events.
+- Looks at each axis and tries to divide the counts into equal bins of events.
 - Then sub-divides each bin of axis 1 by axis 2 and axis 3 etc (making a
     n-dimensional histogram).
 - Saves the binning and histogram to files.
@@ -24,7 +24,8 @@ The following are the axes:
 - Photons (`AnalysisPhotons`)
 - MissingET (`MET_Core_AnalysisMET`) - In ATLAS,`met` is analysis dependent. This is just the first object in the `MissingET` container, with `met()` called on that object.
 
-Use `--help` to see available options.
+Use `--help` to see available options. Set `--bins-per-axis` to control how many bins are
+used per axis (defaults to 4).
 
 An example output:
 
@@ -59,6 +60,7 @@ $ atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main
 │ [0.0, 6.0) │ [1.0, 3.0)   │ [2.0, 8.0)  │ [2.0, 7.0) │ [2.0, 7.0) │ [3.0, 4.0)  │ [11.0, 18.0)  │     0 │    0.000 │
 │ [0.0, 6.0) │ [1.0, 3.0)   │ [2.0, 8.0)  │ [2.0, 7.0) │ [2.0, 7.0) │ [0.0, 3.0)  │ [11.0, 18.0)  │     0 │    0.000 │
 └────────────┴──────────────┴─────────────┴────────────┴────────────┴─────────────┴───────────────┴───────┴──────────┘
+Histogram summary: max fraction 0.011, zero bins 16,384
 ```
 
 ## Installation

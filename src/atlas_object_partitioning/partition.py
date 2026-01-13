@@ -6,6 +6,7 @@ from atlas_object_partitioning.histograms import (
     bottom_bins,
     build_nd_histogram,
     compute_bin_boundaries,
+    histogram_summary,
     print_bin_table,
     top_bins,
     write_bin_boundaries_yaml,
@@ -48,12 +49,17 @@ def main(
         help="List of axes to ignore when computing bin boundaries. Specify repeatedly for "
         "multiple axes.",
     ),
+    bins_per_axis: int = typer.Option(
+        4,
+        "--bins-per-axis",
+        help="Number of bins to use per axis when computing boundaries.",
+    ),
 ):
     """Use counts of PHYSLITE objects in a rucio dataset to determine skim binning.
 
     - Each *axis* is a count of PHYSLITE objects (muons, electrons, jets, etc).
 
-    - Looks at each axis and tries to divide the counts into 4 bins of equal #s of events.
+    - Looks at each axis and tries to divide the counts into equal bins of events.
 
     - Then sub-divides each bin of axis 1 by axis 2 and axis 3 etc (making a
       n-dimensional histogram).
@@ -71,7 +77,9 @@ def main(
     if output_file is not None:
         ak.to_parquet(counts, output_file)
 
-    simple_boundaries = compute_bin_boundaries(counts, ignore_axes=ignore_axes)
+    simple_boundaries = compute_bin_boundaries(
+        counts, ignore_axes=ignore_axes, bins_per_axis=bins_per_axis
+    )
     write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")
 
     hist = build_nd_histogram(counts, simple_boundaries)
@@ -81,6 +89,11 @@ def main(
     bottom = bottom_bins(hist, n=10)
     print_bin_table(top, "Top 10 bins")
     print_bin_table(bottom, "Least 10 bins")
+    summary = histogram_summary(hist)
+    typer.echo(
+        f"Histogram summary: max fraction {summary['max_fraction']:.3f}, "
+        f"zero bins {summary['zero_bins']:,}"
+    )
 
 
 if __name__ == "__main__":

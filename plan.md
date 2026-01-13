@@ -25,7 +25,8 @@ Find bin boundaries so the largest bin fraction is ~5% while minimizing the numb
    - Expect strong correlation between large-R jets and regular jets; treat them cautiously as independent axes.
    - Use `--ignore-axes met` for all CLI runs in this plan.
 4. **Done** **Assess**: With `-n 50` and `--ignore-axes met`, max fraction is 0.021 (< 5%) but zeros remain high (least-10 all zero); boundary tuning is needed to reduce sparsity.
-5. **Next** **Boundary tuning**: Add CLI option to control bins per axis (and/or ignore axes) so we can reduce zero-bin count while keeping max fraction <= 5%.
+5. **Done** **Boundary tuning**: Added CLI option to control bins per axis and histogram summary output; tested bins-per-axis=2,3,4 with `--ignore-axes met` on `-n 50`. Best tradeoff so far is 3 bins (max fraction 0.039, zero bins 0).
+6. **Next** **Axis-specific bin controls**: If zeros reappear or max fraction drifts with full stats, add a CLI option to set bins per axis by name (e.g., `--bins-per-axis n_jets=3 n_muons=4`) while keeping a global default. Update `compute_bin_boundaries` to accept a mapping `{axis: bins}` and fall back to the default for unspecified axes; keep `--ignore-axes met` in runs. Re-run `-n 0` with tuned axes and log max fraction + zero-bin count.
 
 ## Likely code changes (if needed)
 

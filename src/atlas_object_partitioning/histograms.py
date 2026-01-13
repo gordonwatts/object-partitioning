@@ -10,8 +10,8 @@ from rich.console import Console
 from rich.table import Table
 
 
-def _compute_boundaries(values: ak.Array) -> List[int]:
-    """Compute 3 boundary values that split the distribution into 4 bins.
+def _compute_boundaries(values: ak.Array, n_bins: int) -> List[int]:
+    """Compute boundary values that split the distribution into ``n_bins`` bins.
 
     Parameters
     ----------
@@ -20,8 +20,10 @@ def _compute_boundaries(values: ak.Array) -> List[int]:
     Returns
     -------
     List[int]
-        List of boundary values (upper edge of 1st, 2nd, 3rd quartiles).
+        List of boundary values (upper edge of each quantile).
     """
+    if n_bins < 1:
+        raise ValueError("n_bins must be >= 1")
     if len(values) == 0:
         return []
     min_val = int(ak.min(values))
@@ -29,10 +31,10 @@ def _compute_boundaries(values: ak.Array) -> List[int]:
     bins = np.arange(min_val, max_val + 2)
     hist, edges = np.histogram(values, bins=bins)
     cdf = np.cumsum(hist)
-    quarter = cdf[-1] / 4
+    step = cdf[-1] / n_bins
     boundaries: List[int] = []
-    for i in range(1, 4):
-        idx = int(np.searchsorted(cdf, quarter * i))
+    for i in range(1, n_bins):
+        idx = int(np.searchsorted(cdf, step * i))
         boundaries.append(int(edges[idx + 1]))
 
     # Always return [min, ...boundaries..., max+1]
@@ -44,7 +46,11 @@ def _compute_boundaries(values: ak.Array) -> List[int]:
     return boundaries
 
 
-def compute_bin_boundaries(data: ak.Array, ignore_axes: List[str] = []) -> Dict[str, List[int]]:
+def compute_bin_boundaries(
+    data: ak.Array,
+    ignore_axes: List[str] = [],
+    bins_per_axis: int = 4,
+) -> Dict[str, List[int]]:
     """Compute bin boundaries for all axes in the awkward array."""
     missing = [ax for ax in ignore_axes if ax not in data.fields]
     if len(missing) > 0:
@@ -53,7 +59,7 @@ def compute_bin_boundaries(data: ak.Array, ignore_axes: List[str] = []) -> Dict[
     result: Dict[str, List[int]] = {}
     good_data_fields = [ax for ax in data.fields if ax not in ignore_axes]
     for axis in good_data_fields:
-        result[axis] = _compute_boundaries(data[axis])
+        result[axis] = _compute_boundaries(data[axis], bins_per_axis)
     return result
 
 
@@ -171,3 +177,13 @@ def print_bin_table(records: List[Dict[str, object]], title: str) -> None:
         row.append(f"{r['fraction']:.3f}")
         table.add_row(*row)
     Console().print(table)
+
+
+def histogram_summary(hist: BaseHist) -> Dict[str, float]:
+    """Return summary stats for the histogram."""
+    counts = np.asarray(hist.view())
+    flat = counts.flatten()
+    total = int(flat.sum())
+    max_fraction = 0.0 if total == 0 else float(flat.max()) / float(total)
+    zero_bins = int(np.count_nonzero(flat == 0))
+    return {"max_fraction": max_fraction, "zero_bins": zero_bins}
