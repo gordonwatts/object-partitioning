@@ -1,12 +1,17 @@
 # Use Python 3.13 slim as base image
 FROM python:3.13-slim
 
+# Set locale environment variables to C.UTF-8 (always available in Debian)
+ENV LANG=C.UTF-8 \
+    LC_ALL=C.UTF-8
+
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
     curl \
     ca-certificates \
     gnupg \
     git \
+    bash \
     && rm -rf /var/lib/apt/lists/*
 
 # Install Node.js 22.x via NodeSource
@@ -33,7 +38,8 @@ RUN groupadd --gid $USER_GID $USERNAME \
 # Set the default user
 USER $USERNAME
 
-# Add .local/bin to PATH for user-installed Python packages
+# Set bash as the default shell
+SHELL ["/bin/bash", "-c"]
 ENV PATH="/home/vscode/.local/bin:$PATH"
 
 # Set working directory

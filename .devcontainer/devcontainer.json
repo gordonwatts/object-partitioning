@@ -12,14 +12,15 @@
     ],
     // Install Python package in editable mode with test dependencies after container creation
     "postCreateCommand": "pip install --user -e '.[test]'",
-    // VS Code customizations
+    "postStartCommand": "python --version && node --version && npm list -g --depth=0 @openai/codex",
     "customizations": {
         "vscode": {
             "extensions": [
                 "ms-python.python",
                 "ms-python.vscode-pylance",
                 "ms-python.black-formatter",
-                "ms-python.flake8"
+                "ms-python.flake8",
+                "github.copilot-chat"
             ],
             "settings": {
                 "python.defaultInterpreterPath": "/usr/local/bin/python",
@@ -44,12 +45,20 @@
                 "python.linting.flake8Enabled": true,
                 "python.linting.flake8Args": [
                     "--max-line-length=99"
-                ]
+                ],
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash"
+                    }
+                }
             }
         }
     },
     // Forward ports if needed (none required for this project)
     "forwardPorts": [],
-    // Use 'postCreateCommand' to run commands after the container is created.
-    "postStartCommand": "python --version && node --version && npm list -g --depth=0 @openai/codex"
+    // Features and configurations for container behavior
+    "features": {
+        "ghcr.io/devcontainers/features/github-cli:1": {}
+    }
 }
