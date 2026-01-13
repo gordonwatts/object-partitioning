@@ -44,9 +44,7 @@ def _compute_boundaries(values: ak.Array) -> List[int]:
     return boundaries
 
 
-def compute_bin_boundaries(
-    data: ak.Array, ignore_axes: List[str] = []
-) -> Dict[str, List[int]]:
+def compute_bin_boundaries(data: ak.Array, ignore_axes: List[str] = []) -> Dict[str, List[int]]:
     """Compute bin boundaries for all axes in the awkward array."""
     missing = [ax for ax in ignore_axes if ax not in data.fields]
     if len(missing) > 0:
@@ -133,8 +131,7 @@ def _sorted_bin_records(
     records = []
     edges = [np.asarray(ax.edges) for ax in hist.axes]
     axes_names = [
-        ax.name if ax.name is not None else f"axis_{i}"
-        for i, ax in enumerate(hist.axes)
+        ax.name if ax.name is not None else f"axis_{i}" for i, ax in enumerate(hist.axes)
     ]
     for idx in order[:n]:
         count = int(flat[idx])

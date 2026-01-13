@@ -40,9 +40,7 @@ def collect_object_counts(
         n_files=_nfiles_value(n_files),
         title="object_counts",
     )
-    r = deliver(
-        spec, backend_name, adaptor=adaptor, ignore_local_cache=ignore_local_cache
-    )
+    r = deliver(spec, backend_name, adaptor=adaptor, ignore_local_cache=ignore_local_cache)
 
     result = to_awk(r)
 

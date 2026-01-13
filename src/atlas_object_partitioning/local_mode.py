@@ -54,9 +54,7 @@ def find_dataset(ds_name: str, prefer_local: bool = False):
             return dataset.FileList([str(file)]), SXLocationOptions.mustUseLocal
         else:
             if os.path.sep in ds_name:
-                raise ValueError(
-                    f"{ds_name} looks like a file path, but the file does not exist"
-                )
+                raise ValueError(f"{ds_name} looks like a file path, but the file does not exist")
             did = ds_name
             return dataset.Rucio(did), SXLocationOptions.mustUseRemote
 
@@ -124,15 +122,9 @@ def deliver(
         if adaptor is None:
             _, _, adaptor = install_sx_local()
         if SXLocalAdaptor is None:
-            raise ImportError(
-                "servicex-local is not installed or could not be imported."
-            )
+            raise ImportError("servicex-local is not installed or could not be imported.")
         import servicex_local
 
-        return servicex_local.deliver(
-            spec, adaptor=adaptor, ignore_local_cache=ignore_local_cache
-        )
+        return servicex_local.deliver(spec, adaptor=adaptor, ignore_local_cache=ignore_local_cache)
     else:
-        return sx_deliver(
-            spec, servicex_name=servicex_name, ignore_local_cache=ignore_local_cache
-        )
+        return sx_deliver(spec, servicex_name=servicex_name, ignore_local_cache=ignore_local_cache)
