@@ -1,0 +1,32 @@
+# Python cache and build artifacts
+**/__pycache__
+**/*.pyc
+**/*.pyo
+**/*.egg-info
+**/*.eggs
+.pytest_cache
+
+# Virtual environments
+venv/
+.venv/
+env/
+ENV/
+
+# Credentials (will be mounted at runtime)
+servicex.yaml
+
+# Git and IDE
+.git
+.gitignore
+.vscode
+.idea
+
+# Test coverage
+.coverage
+htmlcov/
+.tox/
+
+# Build outputs
+dist/
+build/
+*.whl

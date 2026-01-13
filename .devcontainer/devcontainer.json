@@ -1,0 +1,55 @@
+{
+    "name": "Atlas Object Partitioning Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "remoteUser": "vscode",
+    // Mount servicex.yaml as read-only secret and add pip cache volume
+    "mounts": [
+        "source=${localWorkspaceFolder}/servicex.yaml,target=/workspace/servicex.yaml,type=bind,readonly",
+        "source=atlas-object-partitioning-pip-cache,target=/home/vscode/.cache/pip,type=volume"
+    ],
+    // Install Python package in editable mode with test dependencies after container creation
+    "postCreateCommand": "pip install --user -e '.[test]'",
+    // VS Code customizations
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.black-formatter",
+                "ms-python.flake8"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.terminal.activateEnvironment": false,
+                // Testing configuration
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestArgs": [
+                    "tests"
+                ],
+                // Black formatter configuration (99 character line length per project)
+                "python.formatting.provider": "none",
+                "[python]": {
+                    "editor.defaultFormatter": "ms-python.black-formatter",
+                    "editor.formatOnSave": true
+                },
+                "black-formatter.args": [
+                    "--line-length=99"
+                ],
+                // Flake8 linter configuration
+                "python.linting.enabled": true,
+                "python.linting.flake8Enabled": true,
+                "python.linting.flake8Args": [
+                    "--max-line-length=99"
+                ]
+            }
+        }
+    },
+    // Forward ports if needed (none required for this project)
+    "forwardPorts": [],
+    // Use 'postCreateCommand' to run commands after the container is created.
+    "postStartCommand": "python --version && node --version && npm list -g --depth=0 @openai/codex"
+}
