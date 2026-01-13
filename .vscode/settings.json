@@ -15,5 +15,6 @@
         "ttbar",
         "typer",
         "xaodr"
-    ]
+    ],
+    "python-envs.pythonProjects": []
 }
