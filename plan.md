@@ -16,7 +16,7 @@ Find bin boundaries so the largest bin fraction is ~5% while minimizing the numb
    - Capture the printed Top/Least bin tables.
    - Note max fraction in Top 10 and count of zero bins in Least 10.
    - Result: max fraction `0.011`, zero-bin count in Least 10: `10/10` (all zero).
-   - Maintain `log.md` with run summaries (command, max fraction, zero-bin count, notes).
+   - Maintain `log.md` with run summaries (command, max fraction, zero-bin count, notes, source code changes).
 2. **Done** **Increase stats**: Re-run with larger `-n` (e.g., 25, 50, 100, 0) to see stability.
    - Keep a small log: `n_files`, max fraction, zero-bin count.
    - Conclusion: use `-n 50` for future runs (fractions changed vs `-n 10`; still manageable runtime).
