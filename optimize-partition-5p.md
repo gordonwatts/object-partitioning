@@ -2,6 +2,10 @@
 
 Goal: Find bin boundaries so the largest bin fraction is about 5 percent while minimizing zero-count bins, starting from `data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697`.
 
+## Checkpoint
+
+As of 2026-01-14, axis-specific bin overrides are implemented and validated, but CLI runs are blocked because `servicex.yaml` is a directory. Restart runs after fixing ServiceX configuration.
+
 ## Constraints
 
 Be sure to always obey the following constraints as you formulate and execute the steps.
@@ -35,8 +39,9 @@ Steps marked as `**Done**` are finished, others are ready to be addressed in ord
 3. **Done** Decide axis exclusions and assumptions. Result: ignore `met` via `--ignore-axes met` and note large-R jet correlation.
 4. **Done** Assess with `-n 50` and `--ignore-axes met`. Result: max fraction 0.021 (< 5 percent), but least-10 bins still all zero.
 5. **Done** Tune bins-per-axis using the CLI and review histogram summaries. Result: bins-per-axis=3 yields max fraction 0.039 and zero bins 0; bins-per-axis=2 yields 0.102; bins-per-axis=4 yields 0.021 with 27 zero bins.
-6. Add axis-specific bin controls to keep a global default while allowing per-axis overrides; re-run with 50 files (`-n 50`) and log max fraction plus zero-bin count.
-7. Re-evaluate whether the 5 percent target and zero-bin threshold are met at full stats; if not, adjust binning logic and iterate.
+6. **Done** Add axis-specific bin controls to keep a global default while allowing per-axis overrides. Result: CLI accepts `--bins-per-axis-override AXIS=INT`, validated in `compute_bin_boundaries`.
+7. Resolve ServiceX config error (`servicex.yaml` is a directory) or provide a valid config path; re-run with 50 files (`-n 50`) and log max fraction plus zero-bin count.
+8. Re-evaluate whether the 5 percent target and zero-bin threshold are met at full stats; if not, adjust binning logic and iterate.
 
 ## Future Ideas
 

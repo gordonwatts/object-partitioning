@@ -1,4 +1,4 @@
-from typing import List
+from typing import Dict, List
 import awkward as ak
 import typer
 
@@ -15,6 +15,38 @@ from atlas_object_partitioning.histograms import (
 from atlas_object_partitioning.scan_ds import collect_object_counts
 
 app = typer.Typer()
+
+
+def _parse_bins_per_axis_overrides(entries: List[str]) -> Dict[str, int]:
+    overrides: Dict[str, int] = {}
+    for entry in entries:
+        if "=" not in entry:
+            raise typer.BadParameter(
+                f"Invalid --bins-per-axis-override value '{entry}'. Expected AXIS=INT."
+            )
+        axis, value = entry.split("=", 1)
+        if not axis:
+            raise typer.BadParameter(
+                f"Invalid --bins-per-axis-override value '{entry}'. Axis cannot be empty."
+            )
+        try:
+            bins = int(value)
+        except ValueError as exc:
+            raise typer.BadParameter(
+                f"Invalid --bins-per-axis-override value '{entry}'. "
+                "Bins must be an integer."
+            ) from exc
+        if bins < 1:
+            raise typer.BadParameter(
+                f"Invalid --bins-per-axis-override value '{entry}'. "
+                "Bins must be >= 1."
+            )
+        if axis in overrides:
+            raise typer.BadParameter(
+                f"Duplicate --bins-per-axis-override axis '{axis}'."
+            )
+        overrides[axis] = bins
+    return overrides
 
 
 @app.command()
@@ -54,6 +86,11 @@ def main(
         "--bins-per-axis",
         help="Number of bins to use per axis when computing boundaries.",
     ),
+    bins_per_axis_override: List[str] = typer.Option(
+        [],
+        "--bins-per-axis-override",
+        help="Override bins per axis, format AXIS=INT (repeat for multiple axes).",
+    ),
 ):
     """Use counts of PHYSLITE objects in a rucio dataset to determine skim binning.
 
@@ -77,8 +114,12 @@ def main(
     if output_file is not None:
         ak.to_parquet(counts, output_file)
 
+    overrides = _parse_bins_per_axis_overrides(bins_per_axis_override)
     simple_boundaries = compute_bin_boundaries(
-        counts, ignore_axes=ignore_axes, bins_per_axis=bins_per_axis
+        counts,
+        ignore_axes=ignore_axes,
+        bins_per_axis=bins_per_axis,
+        bins_per_axis_overrides=overrides,
     )
     write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")
 

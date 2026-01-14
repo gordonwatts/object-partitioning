@@ -79,6 +79,22 @@ def test_compute_bin_boundaries_ignore_axes():
     assert "n_jets" not in boundaries
 
 
+def test_compute_bin_boundaries_axis_overrides():
+    data = ak.Array(
+        {
+            "n_muons": list(range(10)),
+            "n_electrons": list(range(10)),
+        }
+    )
+    boundaries = compute_bin_boundaries(
+        data,
+        bins_per_axis=2,
+        bins_per_axis_overrides={"n_muons": 3},
+    )
+    assert boundaries["n_muons"] == [0, 4, 7, 10]
+    assert boundaries["n_electrons"] == [0, 5, 10]
+
+
 def test_compute_bin_boundaries_ignore_bad_axis():
     data = ak.Array(
         {
@@ -89,3 +105,29 @@ def test_compute_bin_boundaries_ignore_bad_axis():
     )
     with pytest.raises(ValueError):
         compute_bin_boundaries(data, ignore_axes=["n_jets", "n_photons"])
+
+
+def test_compute_bin_boundaries_override_bad_axis():
+    data = ak.Array(
+        {
+            "n_muons": [0, 1, 2],
+            "n_electrons": [1, 0, 2],
+        }
+    )
+    with pytest.raises(ValueError):
+        compute_bin_boundaries(data, bins_per_axis_overrides={"n_jets": 2})
+
+
+def test_compute_bin_boundaries_override_ignored_axis():
+    data = ak.Array(
+        {
+            "n_muons": [0, 1, 2],
+            "n_electrons": [1, 0, 2],
+        }
+    )
+    with pytest.raises(ValueError):
+        compute_bin_boundaries(
+            data,
+            ignore_axes=["n_muons"],
+            bins_per_axis_overrides={"n_muons": 2},
+        )

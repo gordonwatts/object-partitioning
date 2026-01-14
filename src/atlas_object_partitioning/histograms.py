@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, List
+from typing import Dict, List, Optional
 
 import awkward as ak
 import numpy as np
@@ -48,18 +48,37 @@ def _compute_boundaries(values: ak.Array, n_bins: int) -> List[int]:
 
 def compute_bin_boundaries(
     data: ak.Array,
-    ignore_axes: List[str] = [],
+    ignore_axes: Optional[List[str]] = None,
     bins_per_axis: int = 4,
+    bins_per_axis_overrides: Optional[Dict[str, int]] = None,
 ) -> Dict[str, List[int]]:
     """Compute bin boundaries for all axes in the awkward array."""
+    if ignore_axes is None:
+        ignore_axes = []
+    if bins_per_axis_overrides is None:
+        bins_per_axis_overrides = {}
     missing = [ax for ax in ignore_axes if ax not in data.fields]
     if len(missing) > 0:
         raise ValueError(f"Cannot ignore missing axes: {', '.join(missing)}")
+    override_missing = [
+        ax for ax in bins_per_axis_overrides.keys() if ax not in data.fields
+    ]
+    if len(override_missing) > 0:
+        raise ValueError(
+            "Cannot override bins for missing axes: "
+            f"{', '.join(override_missing)}"
+        )
+    override_ignored = [ax for ax in bins_per_axis_overrides.keys() if ax in ignore_axes]
+    if len(override_ignored) > 0:
+        raise ValueError(
+            "Cannot override bins for ignored axes: " f"{', '.join(override_ignored)}"
+        )
 
     result: Dict[str, List[int]] = {}
     good_data_fields = [ax for ax in data.fields if ax not in ignore_axes]
     for axis in good_data_fields:
-        result[axis] = _compute_boundaries(data[axis], bins_per_axis)
+        axis_bins = bins_per_axis_overrides.get(axis, bins_per_axis)
+        result[axis] = _compute_boundaries(data[axis], axis_bins)
     return result
 
 
