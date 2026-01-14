@@ -24,6 +24,7 @@ The following hints may be helpful:
 - `--bins-per-axis 3` gave the best tradeoff so far (max fraction 0.039, zero bins 0).
 - `--bins-per-axis 2` raised max fraction to 0.102; `--bins-per-axis 4` introduced 27 zero bins.
 - Stop once max fraction is <= 5 percent and zero-bin count is acceptably low for the chosen `n_files`.
+- 50 files can take quite a while to run the first time - so be patient (minutes!).
 
 ## Steps
 
