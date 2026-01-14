@@ -18,3 +18,16 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-14 03:49 Added checkpoint note to plan: overrides implemented; runs blocked by servicex.yaml directory.
 - 2026-01-14 04:24 Checked for ServiceX config; no `servicex.yaml` found in repo or home, so split step to request config before rerun.
 - 2026-01-14 04:26 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`; max fraction 0.039, zero bins 0.
+- 2026-01-14 04:31 Updated plan goal to target smallest bin fractions around ~1% and added tuning steps to raise the minimum bin size.
+- 2026-01-14 04:32 Adjusted step 11 wording to be general about rerunning with updated bin settings.
+- 2026-01-14 04:36 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, overrides `n_taus=2`, `n_photons=2`; max fraction 0.068, zero bins 0 (least bins ~0.000).
+- 2026-01-14 04:36 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, overrides `n_jets=4`, `n_large_jets=4`, `n_taus=2`, `n_photons=2`; max fraction 0.055, zero bins 3.
+- 2026-01-14 04:36 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, overrides `n_jets=4`, `n_large_jets=3`, `n_taus=2`, `n_photons=2`; max fraction 0.055, zero bins 0 (least bins ~0.000).
+- 2026-01-14 04:36 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, overrides `n_jets=5`, `n_large_jets=4`, `n_taus=2`, `n_photons=2`; max fraction 0.055, zero bins 3.
+- 2026-01-14 04:36 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, overrides `n_jets=4`, `n_large_jets=3`, `n_electrons=4`, `n_muons=4`, `n_taus=2`, `n_photons=2`; max fraction 0.055, zero bins 0 (least bins ~0.000).
+- 2026-01-14 04:36 Marked plan step 10 done after multiple tuning attempts and added new steps to try collapsing or ignoring sparse axes.
+- 2026-01-14 05:27 Added CLI options to scan bins-per-axis against target min/max bin fractions and report min fractions.
+- 2026-01-14 05:27 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--target-min-fraction 0.01`, `--target-max-fraction 0.05`, `--target-bins-min 2`, `--target-bins-max 4`; scan showed max 0.102 (bins=2), min fractions ~0.000 for bins=3/4, selected bins=3 with max 0.039.
+- 2026-01-14 05:27 Updated plan steps to reflect the new target-fraction scan option and next actions.
+- 2026-01-14 05:39 Ran target scan with `-n 50`, `--ignore-axes met`, overrides `n_taus=1`, `n_photons=1`, scan 1-5 with targets 0.01/0.05; selected bins-per-axis=2 with max 0.152 and min 0.017 (no target met).
+- 2026-01-14 05:39 Ran target scan with `-n 50`, `--ignore-axes met --ignore-axes n_taus --ignore-axes n_photons`, scan 1-5 with targets 0.01/0.05; selected bins-per-axis=2 with max 0.152 and min 0.017 (no target met).

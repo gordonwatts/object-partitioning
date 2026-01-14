@@ -203,6 +203,22 @@ def histogram_summary(hist: BaseHist) -> Dict[str, float]:
     counts = np.asarray(hist.view())
     flat = counts.flatten()
     total = int(flat.sum())
-    max_fraction = 0.0 if total == 0 else float(flat.max()) / float(total)
+    if total == 0:
+        return {
+            "max_fraction": 0.0,
+            "min_fraction": 0.0,
+            "min_nonzero_fraction": 0.0,
+            "zero_bins": int(flat.size),
+        }
+    fractions = flat.astype(float) / float(total)
+    max_fraction = float(fractions.max())
+    min_fraction = float(fractions.min())
+    nonzero = fractions[flat > 0]
+    min_nonzero_fraction = float(nonzero.min()) if nonzero.size > 0 else 0.0
     zero_bins = int(np.count_nonzero(flat == 0))
-    return {"max_fraction": max_fraction, "zero_bins": zero_bins}
+    return {
+        "max_fraction": max_fraction,
+        "min_fraction": min_fraction,
+        "min_nonzero_fraction": min_nonzero_fraction,
+        "zero_bins": zero_bins,
+    }
