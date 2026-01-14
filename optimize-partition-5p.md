@@ -40,8 +40,10 @@ Steps marked as `**Done**` are finished, others are ready to be addressed in ord
 4. **Done** Assess with `-n 50` and `--ignore-axes met`. Result: max fraction 0.021 (< 5 percent), but least-10 bins still all zero.
 5. **Done** Tune bins-per-axis using the CLI and review histogram summaries. Result: bins-per-axis=3 yields max fraction 0.039 and zero bins 0; bins-per-axis=2 yields 0.102; bins-per-axis=4 yields 0.021 with 27 zero bins.
 6. **Done** Add axis-specific bin controls to keep a global default while allowing per-axis overrides. Result: CLI accepts `--bins-per-axis-override AXIS=INT`, validated in `compute_bin_boundaries`.
-7. Resolve ServiceX config error (`servicex.yaml` is a directory) or provide a valid config path; re-run with 50 files (`-n 50`) and log max fraction plus zero-bin count.
-8. Re-evaluate whether the 5 percent target and zero-bin threshold are met at full stats; if not, adjust binning logic and iterate.
+7. **Done** Provide a valid ServiceX config path or `servicex.yaml` file (request from user if missing). Result: `servicex.yaml` confirmed at `/workspaces/servicex.yaml`.
+8. **Done** Once ServiceX config is available, re-run with 50 files (`-n 50`) and log max fraction plus zero-bin count. Result: `--bins-per-axis 3` yields max fraction 0.039, zero bins 0.
+9. **Done** Re-evaluate whether the 5 percent target and zero-bin threshold are met at full stats; if not, adjust binning logic and iterate. Result: targets met at `-n 50`, no further adjustments needed.
+10. Confirm whether to validate with higher stats (e.g., `-n 100` or `-n 0`) or stop at `-n 50`.
 
 ## Future Ideas
 

@@ -16,3 +16,5 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-14 03:32 Attempted CLI run with -n 50, --ignore-axes met, --bins-per-axis 3, overrides n_taus=2/n_photons=2; failed because ServiceX tried to read /workspaces/object-partitioning/servicex.yaml but it is a directory (IsADirectoryError).
 - 2026-01-14 03:32 Marked step 6 done (axis-specific bin overrides) and added a new step to resolve ServiceX config before rerunning -n 50.
 - 2026-01-14 03:49 Added checkpoint note to plan: overrides implemented; runs blocked by servicex.yaml directory.
+- 2026-01-14 04:24 Checked for ServiceX config; no `servicex.yaml` found in repo or home, so split step to request config before rerun.
+- 2026-01-14 04:26 Ran `atlas-object-partitioning` with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`; max fraction 0.039, zero bins 0.
