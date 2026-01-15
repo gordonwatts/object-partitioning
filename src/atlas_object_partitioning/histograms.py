@@ -1,5 +1,5 @@
 import pickle
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Tuple
 
 import awkward as ak
 import numpy as np
@@ -80,6 +80,37 @@ def compute_bin_boundaries(
         axis_bins = bins_per_axis_overrides.get(axis, bins_per_axis)
         result[axis] = _compute_boundaries(data[axis], axis_bins)
     return result
+
+
+def apply_tail_caps(
+    data: ak.Array,
+    ignore_axes: Optional[List[str]] = None,
+    tail_cap_quantile: Optional[float] = None,
+) -> Tuple[ak.Array, Dict[str, int]]:
+    """Cap per-axis counts at a quantile to reduce long tails."""
+    if ignore_axes is None:
+        ignore_axes = []
+    if tail_cap_quantile is None or tail_cap_quantile >= 1.0:
+        return data, {}
+    if not 0.0 < tail_cap_quantile <= 1.0:
+        raise ValueError("tail_cap_quantile must be between 0 and 1.")
+
+    capped: Dict[str, ak.Array] = {}
+    caps: Dict[str, int] = {}
+    for axis in data.fields:
+        values = data[axis]
+        if axis in ignore_axes or len(values) == 0:
+            capped[axis] = values
+            continue
+        values_np = ak.to_numpy(values)
+        cap_value = int(np.quantile(values_np, tail_cap_quantile))
+        max_value = int(values_np.max())
+        if cap_value < max_value:
+            caps[axis] = cap_value
+            capped[axis] = ak.where(values > cap_value, cap_value, values)
+        else:
+            capped[axis] = values
+    return ak.zip(capped, depth_limit=1), caps
 
 
 class BinBoundaries(BaseModel):

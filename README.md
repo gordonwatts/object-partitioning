@@ -27,6 +27,24 @@ The following are the axes:
 Use `--help` to see available options. Set `--bins-per-axis` to control how many bins are
 used per axis (defaults to 4).
 
+Tail-capping optionally clips per-axis counts at a quantile before binning. This reduces
+long tails by replacing values above the chosen quantile with the cap value, which can
+help stabilize boundary selection when a few extreme events dominate an axis.
+
+Tail-capping examples:
+
+```bash
+# Cap each axis at the 98th percentile before building boundaries
+atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  -n 50 --ignore-axes met --bins-per-axis 3 --tail-cap-quantile 0.98
+
+# Combine tail-capping with target scan to see summary stats
+atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  -n 50 --ignore-axes met --tail-cap-quantile 0.95 \
+  --target-min-fraction 0.01 --target-max-fraction 0.05 \
+  --target-bins-min 3 --target-bins-max 3
+```
+
 Adaptive binning examples (greedily reduces bins per axis to approach target min/max
 fractions):
 

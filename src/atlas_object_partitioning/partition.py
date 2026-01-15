@@ -4,6 +4,7 @@ import typer
 from hist import BaseHist
 
 from atlas_object_partitioning.histograms import (
+    apply_tail_caps,
     bottom_bins,
     build_nd_histogram,
     compute_bin_boundaries,
@@ -247,6 +248,11 @@ def main(
         "--target-bins-max",
         help="Maximum bins-per-axis to scan when targeting bin fractions.",
     ),
+    tail_cap_quantile: Optional[float] = typer.Option(
+        None,
+        "--tail-cap-quantile",
+        help="Cap per-axis counts at this quantile (0-1] before binning.",
+    ),
 ):
     """Use counts of PHYSLITE objects in a rucio dataset to determine skim binning.
 
@@ -286,10 +292,32 @@ def main(
         raise typer.BadParameter("--target-min-fraction must be between 0 and 1.")
     if target_max_fraction is not None and not 0.0 <= target_max_fraction <= 1.0:
         raise typer.BadParameter("--target-max-fraction must be between 0 and 1.")
+    if tail_cap_quantile is not None and not 0.0 < tail_cap_quantile <= 1.0:
+        raise typer.BadParameter("--tail-cap-quantile must be between 0 and 1.")
     if target_bins_min < 1:
         raise typer.BadParameter("--target-bins-min must be >= 1.")
     if target_bins_max < target_bins_min:
         raise typer.BadParameter("--target-bins-max must be >= --target-bins-min.")
+
+    counts_for_bins = counts
+    tail_caps: Dict[str, int] = {}
+    if tail_cap_quantile is not None and tail_cap_quantile < 1.0:
+        counts_for_bins, tail_caps = apply_tail_caps(
+            counts,
+            ignore_axes=ignore_axes,
+            tail_cap_quantile=tail_cap_quantile,
+        )
+        if tail_caps:
+            caps_summary = ", ".join(
+                f"{axis}={tail_caps[axis]}" for axis in sorted(tail_caps)
+            )
+            typer.echo(
+                f"Applied tail caps (q={tail_cap_quantile:.3f}): {caps_summary}"
+            )
+        else:
+            typer.echo(
+                f"Tail cap quantile {tail_cap_quantile:.3f} had no effect on axes."
+            )
 
     if use_target_scan:
         typer.echo(
@@ -300,12 +328,12 @@ def main(
         best_score = None
         for candidate in range(target_bins_min, target_bins_max + 1):
             candidate_boundaries = compute_bin_boundaries(
-                counts,
+                counts_for_bins,
                 ignore_axes=ignore_axes,
                 bins_per_axis=candidate,
                 bins_per_axis_overrides=overrides,
             )
-            candidate_hist = build_nd_histogram(counts, candidate_boundaries)
+            candidate_hist = build_nd_histogram(counts_for_bins, candidate_boundaries)
             candidate_summary = histogram_summary(candidate_hist)
             typer.echo(
                 "  bins-per-axis "
@@ -347,7 +375,7 @@ def main(
                 f"max {adaptive_max_fraction:.3f}."
             )
             bins_by_axis, simple_boundaries, hist, summary = _adaptive_bins_search(
-                counts,
+                counts_for_bins,
                 ignore_axes=ignore_axes,
                 bins_per_axis=bins_per_axis,
                 overrides=overrides,
@@ -361,12 +389,12 @@ def main(
             )
         else:
             simple_boundaries = compute_bin_boundaries(
-                counts,
+                counts_for_bins,
                 ignore_axes=ignore_axes,
                 bins_per_axis=bins_per_axis,
                 bins_per_axis_overrides=overrides,
             )
-            hist = build_nd_histogram(counts, simple_boundaries)
+            hist = build_nd_histogram(counts_for_bins, simple_boundaries)
             summary = histogram_summary(hist)
 
     write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")

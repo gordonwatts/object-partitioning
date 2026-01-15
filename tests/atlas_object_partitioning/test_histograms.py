@@ -3,6 +3,7 @@ import yaml
 import awkward as ak
 import numpy as np
 from atlas_object_partitioning.histograms import (
+    apply_tail_caps,
     compute_bin_boundaries,
     write_bin_boundaries_yaml,
     build_nd_histogram,
@@ -131,3 +132,20 @@ def test_compute_bin_boundaries_override_ignored_axis():
             ignore_axes=["n_muons"],
             bins_per_axis_overrides={"n_muons": 2},
         )
+
+
+def test_apply_tail_caps():
+    data = ak.Array(
+        {
+            "n_jets": [0, 1, 2, 10],
+            "n_muons": [0, 1, 2, 3],
+        }
+    )
+    capped, caps = apply_tail_caps(
+        data,
+        ignore_axes=["n_muons"],
+        tail_cap_quantile=0.5,
+    )
+    assert caps == {"n_jets": 1}
+    assert ak.to_list(capped["n_jets"]) == [0, 1, 1, 1]
+    assert ak.to_list(capped["n_muons"]) == [0, 1, 2, 3]
