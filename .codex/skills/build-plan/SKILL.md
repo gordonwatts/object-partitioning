@@ -19,30 +19,19 @@ There is one constraint there, which is instructing your to always keep a log of
 
 The hints section contains helpful things you discover while executing the plan. For example, a particular command takes much longer to run than you might expect (e.g. dealing with timeouts).
 
+## Sub-Goals
+
+This is the most important section - a list of sub-goals to acheive the overall goal. Because all the sub-goals to obtain the goal aren't always understood at first, the sub-goals may not be complete.
+
+Goals are failry high level and include multiple steps (running code to get a result, modifying the code, iterating, etc.). If you are exploring towards a soluiton, for example, a sub-goal may be exploring a possible modification towards the solution, and testing that modification. The end of the sub-goal may be to abandon that approach, or that something further is needed.
+
+A completed sub-goal is marked with the `**Acheived**` text.
+
 ## Steps
 
-This is the most important section - a list of steps in the plan. Because all the steps to obtain the goal aren't always understood at first, the steps may not be complete.
+The step section should be setup with the next sub-goal to be acheived, and some initial steps. It is always given that the steps can evolve as we learn more about making our way towards the goal.
 
-As each step is completed:
-    - The step should be marked "**done**`.
-    - Write a short description of the result. It should be detailed enough so that if you go back and re-read this you can figure out the result without having to repeat the work fo the step.
-    - Examine the next step(s) in in light of the results from this step. If they don't make sense, remove them.
-    - If there is no next step, then author a new one.
-
-Writing new steps:
-
-- First determine what is the next logical step to get to the goal.
-- Look at the future ideas section to see if there are any better ideas there.
-- If you have some other ideas, feel free to write them into the future ideas section.
-- The step should be written as a high-level thing
-  - don't talk about modifying specific files
-  - Do talk about the general changes you'd like to make
-  - Or talk about the tests that you want to run
-  - Or talk about the data you'd like to get in order to make a decision.
-  - The steps should be specific (add the capability x, or collect data for y).
-  - Use active verbs when describing the steps.
-
-Unless the user has told you otherwise, after adding new steps to the plan, check with them before executing them.
+The section should be written as in the template. When first setting the plan up, feel free to just leave the template text there.
 
 ## Future Ideas
 
