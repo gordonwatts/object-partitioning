@@ -23,12 +23,21 @@ The following hints may be helpful:
 - {hint 1}
 - {hint 2}
 
+## Sub-Goals
+
+Sub-Goals marked as `**Acheived**` are finished.
+
+1. {sub-goal text with enough high-level detail to give yourself direction, but not at the source level}
+2. {sub-goal text with enough high-level detail to give yourself direction, but not at the source level}
+
 ## Steps
 
-Steps marked as `**Done**` are finished, others are ready to be addressed in order.
+Steps are marked as `**Done**` are finished, others are ready to be addressed in order.
 
-1. {step text with enough high-level detail to give yourself direction, but not at the source level}
-2. {step text with enough high-level detail to give yourself direction, but not at the source level}
+Current sub-goal: {current sub-goal text}
+
+1. {step 1 test with enough high-level detail to give yourself direction}
+2. {step 2 test with enough high-level detail to give yourself direction}
 
 ## Future Ideas
 
