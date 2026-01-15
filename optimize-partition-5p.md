@@ -38,7 +38,9 @@ Sub-Goals marked as `**Achieved**` are finished.
 4. **Failed** Pursue algorithmic alternatives (e.g., tail-capping or bin merging) to raise minimum bin fractions while keeping max fraction <= 5%.
    - Implemented adaptive per-axis bin reduction and ran on 50 files with `--ignore-axes met`.
    - Adaptive bins reduced `n_muons`, `n_jets`, `n_large_jets` to 2; max fraction 0.048 but min nonzero fraction remained ~0.000.
-5. Explore tail-capping or post-histogram bin merging to lift minimum fractions without exceeding max fraction targets.
+5. **Failed** Explore tail-capping or post-histogram bin merging to lift minimum fractions without exceeding max fraction targets.
+   - Added `--tail-cap-quantile` to clip per-axis counts and ran 0.98/0.95 caps on 50 files; max fraction stayed ~0.039 but min/nonzero fractions remained ~0.000, so tail-capping did not lift sparse bins.
+6. Explore post-histogram bin merging strategies to lift minimum bin fractions while keeping max fraction <= 5%.
 
 ## Steps
 

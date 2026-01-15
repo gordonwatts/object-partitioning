@@ -40,3 +40,9 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-15 07:44 Added adaptive bin reduction CLI options and greedy per-axis search for target min/max fractions.
 - 2026-01-15 07:45 Ran adaptive bins with -n 50, --ignore-axes met, --bins-per-axis 3; adaptive reduced n_muons/n_jets/n_large_jets to 2; max fraction 0.048, min nonzero ~0.000, zero bins 0.
 - 2026-01-15 07:45 Marked sub-goal 4 failed (adaptive bins did not raise min fractions) and queued tail-capping/bin-merging as next sub-goal.
+- 2026-01-15 08:10 Added steps to explore tail-capping via per-axis quantile clipping.
+- 2026-01-15 08:11 Added tail-cap quantile support, including histogram capping helper and tests.
+- 2026-01-15 08:12 Ran pytest for tail-cap test coverage (tests/atlas_object_partitioning/test_histograms.py -k tail_caps).
+- 2026-01-15 08:12 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --bins-per-axis 3, --tail-cap-quantile 0.98; caps n_electrons=2 n_jets=17 n_large_jets=3 n_muons=2 n_photons=7 n_taus=3; max fraction 0.039, zero bins 0 (least bins ~0.000).
+- 2026-01-15 08:13 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --tail-cap-quantile 0.95, target scan 3-3 (targets 0.01/0.05); caps n_electrons=1 n_jets=14 n_large_jets=3 n_muons=2 n_photons=6 n_taus=2; max fraction 0.039, min fraction 0.000, min nonzero 0.000, zero bins 0.
+- 2026-01-15 08:13 Marked tail-capping sub-goal failed and queued post-histogram bin merging as the next sub-goal.
