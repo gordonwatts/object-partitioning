@@ -32,27 +32,21 @@ Sub-Goals marked as `**Achieved**` are finished.
 
 1. **Achieved** Establish baseline partitioning with axis exclusions and bin-per-axis tuning.
 2. **Achieved** Implement axis-specific bin overrides and target fraction scanning.
-3. Explore per-axis override strategies to meet min/max fraction targets simultaneously.
+3. **Achieved** Explore per-axis override strategies to meet min/max fraction targets simultaneously.
+   - Tried bins-per-axis=2 with raised jet/large-jet bins, with and without collapsing taus/photons.
+   - Max fraction stayed above target (0.083-0.115) and smallest bins remained below ~1% even when sparse axes were collapsed.
+4. Pursue algorithmic alternatives (e.g., tail-capping or bin merging) to raise minimum bin fractions while keeping max fraction <= 5%.
 
 ## Steps
 
 Steps marked as `**Done**` are finished, others are ready to be addressed in order.
 
-Current sub-goal: Explore per-axis override strategies or algorithmic alternatives to meet min/max fraction targets simultaneously.
+Current sub-goal: Pursue algorithmic alternatives (e.g., tail-capping or bin merging) to raise minimum bin fractions while keeping max fraction <= 5%.
 
-1. **Done** Run a baseline CLI pass on `data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697` with `-n 10`; capture max fraction and least-bin zeros. Result: max fraction 0.011; least-10 zeros 10/10.
-2. **Done** Increase statistics with larger `-n` values (25, 50, 100, 0) to assess stability. Result: fractions changed vs `-n 10`; `-n 50` chosen for future runs.
-3. **Done** Decide axis exclusions and assumptions. Result: ignore `met` via `--ignore-axes met` and note large-R jet correlation.
-4. **Done** Assess with `-n 50` and `--ignore-axes met`. Result: max fraction 0.021 (< 5 percent), but least-10 bins still all zero.
-5. **Done** Tune bins-per-axis using the CLI and review histogram summaries. Result: bins-per-axis=3 yields max fraction 0.039 and zero bins 0; bins-per-axis=2 yields 0.102; bins-per-axis=4 yields 0.021 with 27 zero bins.
-6. **Done** Add axis-specific bin controls to keep a global default while allowing per-axis overrides. Result: CLI accepts `--bins-per-axis-override AXIS=INT`, validated in `compute_bin_boundaries`.
-7. **Done** Provide a valid ServiceX config path or `servicex.yaml` file (request from user if missing). Result: `servicex.yaml` confirmed at `/workspaces/servicex.yaml`.
-8. **Done** Once ServiceX config is available, re-run with 50 files (`-n 50`) and log max fraction plus zero-bin count. Result: `--bins-per-axis 3` yields max fraction 0.039, zero bins 0.
-9. **Done** Re-evaluate whether the 5 percent target and zero-bin threshold are met at full stats; if not, adjust binning logic and iterate. Result: targets met at `-n 50`, no further adjustments needed.
-10. **Done** Tune binning to raise the smallest bin fractions toward ~1% while keeping max fraction <= 5% and avoiding zero bins. Start with `--bins-per-axis 2` and/or per-axis overrides to merge sparse axes (e.g., photons, taus). Result: Tried multiple override combinations (taus/photons to 2, jets/large-jets/electrons/muons up to 4/5). Max fraction stayed ~0.055 and smallest bins remained ~0.000; zero bins varied 0-3.
-11. **Done** Add a CLI option to target min/max bin fractions by scanning bins-per-axis, then run it once at `-n 50`. Result: Added `--target-min-fraction/--target-max-fraction` scan; ran with 2-4 bins and targets 0.01/0.05, no candidate met targets; selected bins-per-axis=3 with max fraction 0.039 and min fraction 0.000.
-12. **Done** Use the new target options with axis collapsing (`--bins-per-axis-override n_taus=1 --bins-per-axis-override n_photons=1`) or ignoring axes (`--ignore-axes n_taus --ignore-axes n_photons`), and widen the scan range to see if min fraction reaches ~1% without exceeding max 5%. Result: Both collapse and ignore runs selected bins-per-axis=2 with max fraction 0.152 and min fraction 0.017; neither met the max 5% target.
-13. Decide whether to explore per-axis overrides on jets/large-jets to reduce max fraction while keeping min fraction >=1% (e.g., keep bins-per-axis=2 globally, raise jets/large-jets bins to 3), or switch to a new algorithmic strategy (tail-capping or weighted binning).
+1. Identify a feasible algorithmic change (tail-capping, bin merging, or axis-weighted binning) that can be exposed via CLI without breaking existing workflows. Do this by listing the changes that would be need to be made in each case.
+2. Compare the feasability, and pick one. The other ideas should be placed in the Future Ideas section.
+3. Follow implementation plan and test.
+4. Prototype the change behind a CLI option and run with `-n 50`, `--ignore-axes met` on the baseline dataset to evaluate max/min fractions.
 
 ## Future Ideas
 

@@ -31,3 +31,8 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-14 05:27 Updated plan steps to reflect the new target-fraction scan option and next actions.
 - 2026-01-14 05:39 Ran target scan with `-n 50`, `--ignore-axes met`, overrides `n_taus=1`, `n_photons=1`, scan 1-5 with targets 0.01/0.05; selected bins-per-axis=2 with max 0.152 and min 0.017 (no target met).
 - 2026-01-14 05:39 Ran target scan with `-n 50`, `--ignore-axes met --ignore-axes n_taus --ignore-axes n_photons`, scan 1-5 with targets 0.01/0.05; selected bins-per-axis=2 with max 0.152 and min 0.017 (no target met).
+- 2026-01-15 06:53 Attempted CLI run with --dataset/partition syntax; atlas-object-partitioning expects ds_name positional, so the run failed with option/argument errors.
+- 2026-01-15 06:53 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --bins-per-axis 2, overrides n_jets=3 n_large_jets=3; max fraction 0.083, zero bins 0 (min fractions ~0.000).
+- 2026-01-15 06:53 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --bins-per-axis 2, overrides n_taus=1 n_photons=1 n_jets=3 n_large_jets=3; max fraction 0.115, zero bins 0 (min fractions ~0.003-0.009).
+- 2026-01-15 06:53 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --bins-per-axis 2, overrides n_taus=1 n_photons=1 n_jets=4 n_large_jets=4; max fraction 0.092, zero bins 0 (min fractions ~0.000-0.003).
+- 2026-01-15 06:53 Marked sub-goal 3 achieved after per-axis override tests; started sub-goal 4 to explore algorithmic alternatives and reset Steps section accordingly.
