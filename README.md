@@ -27,6 +27,23 @@ The following are the axes:
 Use `--help` to see available options. Set `--bins-per-axis` to control how many bins are
 used per axis (defaults to 4).
 
+Adaptive binning examples (greedily reduces bins per axis to approach target min/max
+fractions):
+
+```bash
+# Baseline adaptive search targeting 1% min nonzero, 5% max fraction
+atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  -n 50 --ignore-axes met --bins-per-axis 3 \
+  --adaptive-bins --adaptive-min-fraction 0.01 --adaptive-max-fraction 0.05
+
+# Constrain the minimum bins per axis and keep explicit overrides fixed
+atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  -n 50 --ignore-axes met --bins-per-axis 4 \
+  --bins-per-axis-override n_jets=4 --bins-per-axis-override n_large_jets=4 \
+  --adaptive-bins --adaptive-min-fraction 0.005 --adaptive-max-fraction 0.05 \
+  --adaptive-min-bins 2
+```
+
 An example output:
 
 ```python
@@ -107,6 +124,7 @@ From the **command line**.
 - Use `--help` to see all options
 - Specify a rucio dataset, for example, `atlas-object-partitioning mc23_13p6TeV:mc23_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYSLITE.e8514_s4369_r16083_p6697`
 - Use the `-n` option to specify how many files in the dataset to run over. By default 1, specify `0` to run on everything. Some datasets are quite large. Feel free to start the transform, then re-run the same command to have it pick up where it left off. See the [dashboard](https://servicex.af.uchicago.edu/dashboard) to monitor status.
+- Use `--adaptive-bins` to greedily reduce bins per axis toward target min/max fractions. Note that adaptive mode cannot be combined with `--target-min-fraction` or `--target-max-fraction`.
 
 If you wish, you can also use it as a **library**:
 

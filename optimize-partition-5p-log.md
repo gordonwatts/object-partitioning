@@ -36,3 +36,7 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-15 06:53 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --bins-per-axis 2, overrides n_taus=1 n_photons=1 n_jets=3 n_large_jets=3; max fraction 0.115, zero bins 0 (min fractions ~0.003-0.009).
 - 2026-01-15 06:53 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --bins-per-axis 2, overrides n_taus=1 n_photons=1 n_jets=4 n_large_jets=4; max fraction 0.092, zero bins 0 (min fractions ~0.000-0.003).
 - 2026-01-15 06:53 Marked sub-goal 3 achieved after per-axis override tests; started sub-goal 4 to explore algorithmic alternatives and reset Steps section accordingly.
+- 2026-01-15 07:43 Documented algorithmic alternatives (tail-capping, bin merging, axis-weighted binning) and selected axis-weighted binning as the next approach.
+- 2026-01-15 07:44 Added adaptive bin reduction CLI options and greedy per-axis search for target min/max fractions.
+- 2026-01-15 07:45 Ran adaptive bins with -n 50, --ignore-axes met, --bins-per-axis 3; adaptive reduced n_muons/n_jets/n_large_jets to 2; max fraction 0.048, min nonzero ~0.000, zero bins 0.
+- 2026-01-15 07:45 Marked sub-goal 4 failed (adaptive bins did not raise min fractions) and queued tail-capping/bin-merging as next sub-goal.

@@ -1,6 +1,7 @@
 from typing import Dict, List, Optional, Tuple
 import awkward as ak
 import typer
+from hist import BaseHist
 
 from atlas_object_partitioning.histograms import (
     bottom_bins,
@@ -69,6 +70,101 @@ def _score_candidate(
     )
 
 
+def _adaptive_score(
+    summary: Dict[str, float],
+    target_min_fraction: float,
+    target_max_fraction: float,
+) -> Tuple[float, float, int, float, float]:
+    max_over = max(0.0, summary["max_fraction"] - target_max_fraction)
+    min_under = max(0.0, target_min_fraction - summary["min_nonzero_fraction"])
+    return (
+        max_over,
+        min_under,
+        int(summary["zero_bins"]),
+        -summary["min_nonzero_fraction"],
+        summary["max_fraction"],
+    )
+
+
+def _adaptive_bins_search(
+    counts: ak.Array,
+    ignore_axes: List[str],
+    bins_per_axis: int,
+    overrides: Dict[str, int],
+    target_min_fraction: float,
+    target_max_fraction: float,
+    min_bins: int,
+) -> Tuple[Dict[str, int], Dict[str, List[int]], BaseHist, Dict[str, float]]:
+    axes = [ax for ax in counts.fields if ax not in ignore_axes]
+    bins_by_axis = {ax: overrides.get(ax, bins_per_axis) for ax in axes}
+    fixed_axes = set(overrides.keys())
+
+    def build_from_bins(
+        candidate_bins: Dict[str, int],
+    ) -> Tuple[Dict[str, List[int]], BaseHist, Dict[str, float]]:
+        boundaries = compute_bin_boundaries(
+            counts,
+            ignore_axes=ignore_axes,
+            bins_per_axis=1,
+            bins_per_axis_overrides=candidate_bins,
+        )
+        hist = build_nd_histogram(counts, boundaries)
+        summary = histogram_summary(hist)
+        return boundaries, hist, summary
+
+    boundaries, hist, summary = build_from_bins(bins_by_axis)
+    current_score = _adaptive_score(
+        summary, target_min_fraction, target_max_fraction
+    )
+    max_steps = sum(
+        max(0, bins_by_axis[ax] - min_bins)
+        for ax in axes
+        if ax not in fixed_axes
+    )
+    for _ in range(max_steps):
+        if (
+            summary["max_fraction"] <= target_max_fraction
+            and summary["min_nonzero_fraction"] >= target_min_fraction
+        ):
+            break
+        best = None
+        best_score = None
+        for axis in axes:
+            if axis in fixed_axes or bins_by_axis[axis] <= min_bins:
+                continue
+            candidate_bins = dict(bins_by_axis)
+            candidate_bins[axis] -= 1
+            candidate_boundaries, candidate_hist, candidate_summary = build_from_bins(
+                candidate_bins
+            )
+            score = _adaptive_score(
+                candidate_summary, target_min_fraction, target_max_fraction
+            )
+            if best is None or score < best_score:
+                best = (
+                    axis,
+                    candidate_bins,
+                    candidate_boundaries,
+                    candidate_hist,
+                    candidate_summary,
+                )
+                best_score = score
+
+        if best is None or best_score is None or best_score >= current_score:
+            break
+        axis, bins_by_axis, boundaries, hist, summary = best
+        current_score = best_score
+        typer.echo(
+            "  adaptive reduce "
+            f"{axis}={bins_by_axis[axis]}: "
+            f"max {summary['max_fraction']:.3f}, "
+            f"min nonzero {summary['min_nonzero_fraction']:.3f}, "
+            f"zero bins {summary['zero_bins']:,}"
+        )
+
+    return bins_by_axis, boundaries, hist, summary
+
+
 @app.command()
 def main(
     ds_name: str = typer.Argument(..., help="Name of the dataset"),
@@ -110,6 +206,26 @@ def main(
         [],
         "--bins-per-axis-override",
         help="Override bins per axis, format AXIS=INT (repeat for multiple axes).",
+    ),
+    adaptive_bins: bool = typer.Option(
+        False,
+        "--adaptive-bins",
+        help="Adaptively reduce bins per axis to approach target min/max fractions.",
+    ),
+    adaptive_min_fraction: float = typer.Option(
+        0.01,
+        "--adaptive-min-fraction",
+        help="Target minimum nonzero bin fraction for adaptive binning.",
+    ),
+    adaptive_max_fraction: float = typer.Option(
+        0.05,
+        "--adaptive-max-fraction",
+        help="Target maximum bin fraction for adaptive binning.",
+    ),
+    adaptive_min_bins: int = typer.Option(
+        1,
+        "--adaptive-min-bins",
+        help="Minimum bins allowed per axis when adaptively reducing bins.",
     ),
     target_min_fraction: Optional[float] = typer.Option(
         None,
@@ -156,6 +272,16 @@ def main(
 
     overrides = _parse_bins_per_axis_overrides(bins_per_axis_override)
     use_target_scan = target_min_fraction is not None or target_max_fraction is not None
+    if adaptive_bins and use_target_scan:
+        raise typer.BadParameter(
+            "--adaptive-bins cannot be combined with --target-min-fraction/--target-max-fraction."
+        )
+    if adaptive_min_bins < 1:
+        raise typer.BadParameter("--adaptive-min-bins must be >= 1.")
+    if not 0.0 <= adaptive_min_fraction <= 1.0:
+        raise typer.BadParameter("--adaptive-min-fraction must be between 0 and 1.")
+    if not 0.0 <= adaptive_max_fraction <= 1.0:
+        raise typer.BadParameter("--adaptive-max-fraction must be between 0 and 1.")
     if target_min_fraction is not None and not 0.0 <= target_min_fraction <= 1.0:
         raise typer.BadParameter("--target-min-fraction must be between 0 and 1.")
     if target_max_fraction is not None and not 0.0 <= target_max_fraction <= 1.0:
@@ -214,14 +340,34 @@ def main(
                 f"selected {bins_per_axis} with smallest deviation."
             )
     else:
-        simple_boundaries = compute_bin_boundaries(
-            counts,
-            ignore_axes=ignore_axes,
-            bins_per_axis=bins_per_axis,
-            bins_per_axis_overrides=overrides,
-        )
-        hist = build_nd_histogram(counts, simple_boundaries)
-        summary = histogram_summary(hist)
+        if adaptive_bins:
+            typer.echo(
+                "Running adaptive bin reduction with targets: "
+                f"min nonzero {adaptive_min_fraction:.3f}, "
+                f"max {adaptive_max_fraction:.3f}."
+            )
+            bins_by_axis, simple_boundaries, hist, summary = _adaptive_bins_search(
+                counts,
+                ignore_axes=ignore_axes,
+                bins_per_axis=bins_per_axis,
+                overrides=overrides,
+                target_min_fraction=adaptive_min_fraction,
+                target_max_fraction=adaptive_max_fraction,
+                min_bins=adaptive_min_bins,
+            )
+            typer.echo(
+                "Adaptive binning result: "
+                + ", ".join(f"{ax}={bins_by_axis[ax]}" for ax in sorted(bins_by_axis))
+            )
+        else:
+            simple_boundaries = compute_bin_boundaries(
+                counts,
+                ignore_axes=ignore_axes,
+                bins_per_axis=bins_per_axis,
+                bins_per_axis_overrides=overrides,
+            )
+            hist = build_nd_histogram(counts, simple_boundaries)
+            summary = histogram_summary(hist)
 
     write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")
     write_histogram_pickle(hist, "histogram.pkl")
@@ -230,7 +376,7 @@ def main(
     bottom = bottom_bins(hist, n=10)
     print_bin_table(top, "Top 10 bins")
     print_bin_table(bottom, "Least 10 bins")
-    if use_target_scan:
+    if use_target_scan or adaptive_bins:
         typer.echo(
             "Histogram summary: max fraction "
             f"{summary['max_fraction']:.3f}, min fraction "

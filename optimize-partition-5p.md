@@ -35,28 +35,28 @@ Sub-Goals marked as `**Achieved**` are finished.
 3. **Achieved** Explore per-axis override strategies to meet min/max fraction targets simultaneously.
    - Tried bins-per-axis=2 with raised jet/large-jet bins, with and without collapsing taus/photons.
    - Max fraction stayed above target (0.083-0.115) and smallest bins remained below ~1% even when sparse axes were collapsed.
-4. Pursue algorithmic alternatives (e.g., tail-capping or bin merging) to raise minimum bin fractions while keeping max fraction <= 5%.
+4. **Failed** Pursue algorithmic alternatives (e.g., tail-capping or bin merging) to raise minimum bin fractions while keeping max fraction <= 5%.
+   - Implemented adaptive per-axis bin reduction and ran on 50 files with `--ignore-axes met`.
+   - Adaptive bins reduced `n_muons`, `n_jets`, `n_large_jets` to 2; max fraction 0.048 but min nonzero fraction remained ~0.000.
+5. Explore tail-capping or post-histogram bin merging to lift minimum fractions without exceeding max fraction targets.
 
 ## Steps
 
 Steps marked as `**Done**` are finished, others are ready to be addressed in order.
 
-Current sub-goal: Pursue algorithmic alternatives (e.g., tail-capping or bin merging) to raise minimum bin fractions while keeping max fraction <= 5%.
+Current sub-goal: TBD.
 
-1. Identify a feasible algorithmic change (tail-capping, bin merging, or axis-weighted binning) that can be exposed via CLI without breaking existing workflows. Do this by listing the changes that would be need to be made in each case.
-2. Compare the feasability, and pick one. The other ideas should be placed in the Future Ideas section.
-3. Follow implementation plan and test.
-4. Prototype the change behind a CLI option and run with `-n 50`, `--ignore-axes met` on the baseline dataset to evaluate max/min fractions.
+1. (Add steps for the next sub-goal here.)
 
 ## Future Ideas
 
 The following are some ideas that might be turned into steps in the future.
 
 - Extend the target scan to include per-axis override search or heuristics.
-- Explore algorithmic alternatives to alter the binning an a non-grid like way (so combine some bins, etc.).
+- Explore algorithmic alternatives to alter the binning in a non-grid way (post-histogram bin merging).
 - Add a target-scan mode that varies bins-per-axis per axis for sparse vs dense axes.
 - Compute and print additional histogram summaries (sparsity ratio, zero-bin count) after each run.
-- Explore merging sparse bins or capping bins for axes with long tails.
+- Add tail-capping via per-axis quantile clipping to reduce long-tail sparsity (`--tail-cap-quantile`).
+- Explore merging sparse bins or adding overflow bins after histogram build (`--merge-sparse-bins`).
 - Add a CLI option to print the smallest bin fractions explicitly (e.g., `--min-bin-fraction-target`).
 - Consider an option to collapse or ignore ultra-sparse axes (e.g., `n_taus`, `n_photons`) while keeping them recorded.
-- Explore axis-weighted binning that prioritizes flattening dense axes (jets, large jets) before splitting sparse ones.
