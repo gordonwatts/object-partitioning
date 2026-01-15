@@ -4,7 +4,7 @@ description: The user wants to follow the steps in a plan to drive it towards it
 ---
 # Execute Plan
 
-Your is to drive the plan forward towards its goal. The user should specify which markdown plan file they want to use. If they have not, make sure to ask them - everything is going to depend on the content of the plan file.
+Your is to drive the plan forward towards its goal. The user should specify which markdown plan file they want to use. If they have not, make sure to ask them - everything is going to depend on the content of the plan file. If you are given a name of the plan, scan the directory to see if there is a file that matches that name.
 
 Your job is to complete work on a single sub-goal.
 
