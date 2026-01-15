@@ -15,6 +15,7 @@ Your job is to complete work on a single sub-goal.
   - Repeat the next sub-goal in the header of the `Steps` section.
   - Come up with a series of steps that you think is best option to acheive the sub-goal. It is ok if not all steps are known. The out come of some steps might change what will be done next.
   - Since you are coming up with a plan, pause to ask the user to inspect.
+  - You must do this before moving on - the steps should always reflect your plan for the sub-goal you are working on!
 3. Execute the steps until the goal is met, the goal will fail, etc.
 4. Once all steps are complete and the sub-goal is successful or has failed, add a **Acheived** or **Failed** in the sub-goals section, and add a summary to the sub-goal.
   - The summary should be detailed enough that someone reading it won't have to re-run the steps to runderstand what happened.
