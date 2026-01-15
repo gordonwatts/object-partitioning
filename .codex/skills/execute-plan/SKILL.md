@@ -16,7 +16,7 @@ Your job is to complete work on a single sub-goal.
   - Come up with a series of steps that you think is best option to acheive the sub-goal. It is ok if not all steps are known. The out come of some steps might change what will be done next.
   - Since you are coming up with a plan, pause to ask the user to inspect.
 3. Execute the steps until the goal is met, the goal will fail, etc.
-4. Once all steps are complete and the sub-goal is successful or has failed, add a **Acheived** or **Failed** in the sub-goals section, and add a summary to the sub-goal
+4. Once all steps are complete and the sub-goal is successful or has failed, add a **Acheived** or **Failed** in the sub-goals section, and add a summary to the sub-goal.
   - The summary should be detailed enough that someone reading it won't have to re-run the steps to runderstand what happened.
 5. Clear out the Steps section except for the template for the next sub-goal.
 5. Update the sub-goals, and let the user know.
@@ -58,3 +58,4 @@ When a sub-goal is finished:
 - If the next sub-goals no longer make sense, remove them, and come up with an appropriate new one.
 - If some work suggests some other possible avenues of investigation, feel free to add them to the `Future Ideas` section.
 
+If a sub-goal involves making a choice between a few possible changes or way forward, make sure this decision is made in the steps you write. A step to acheive the sub-goal should be to write a plan for each option, another step to evaluate the options and pick one. The other choices should be moved to future ideas so they can be picked up later if needed. And then go on to modify the steps to follow the plan for the selected choice.
