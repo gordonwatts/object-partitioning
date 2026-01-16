@@ -2,11 +2,15 @@ import pytest
 import yaml
 import awkward as ak
 import numpy as np
+from hist import Hist
 from atlas_object_partitioning.histograms import (
     apply_tail_caps,
     compute_bin_boundaries,
     write_bin_boundaries_yaml,
     build_nd_histogram,
+    histogram_boundaries,
+    merge_sparse_bins,
+    merge_sparse_cells,
     write_histogram_pickle,
     load_histogram_pickle,
     top_bins,
@@ -28,7 +32,7 @@ def test_compute_bin_boundaries(tmp_path):
     write_bin_boundaries_yaml(boundaries, out_file)
     with open(out_file) as f:
         loaded = yaml.safe_load(f)
-    assert loaded == {"axes": boundaries}
+    assert loaded == {"axes": boundaries, "merged_cells": None}
 
 
 def test_compute_bin_boundaries_all_zero():
@@ -149,3 +153,35 @@ def test_apply_tail_caps():
     assert caps == {"n_jets": 1}
     assert ak.to_list(capped["n_jets"]) == [0, 1, 1, 1]
     assert ak.to_list(capped["n_muons"]) == [0, 1, 2, 3]
+
+
+def test_merge_sparse_bins_1d():
+    hist = Hist.new.Var([0, 1, 2, 3], name="n_muons", label="n_muons").Int64()
+    hist[...] = np.array([100, 1, 100])
+    merged, merges = merge_sparse_bins(hist, min_fraction=0.02, min_bins=1)
+    assert merges["n_muons"] == 1
+    assert np.allclose(merged.view(), np.array([101, 100]))  # type: ignore
+    boundaries = histogram_boundaries(merged)
+    assert boundaries["n_muons"] == [0, 2, 3]
+
+
+def test_merge_sparse_bins_respects_min_bins():
+    hist = Hist.new.Var([0, 1, 2], name="n_muons", label="n_muons").Int64()
+    hist[...] = np.array([1, 1])
+    merged, merges = merge_sparse_bins(hist, min_fraction=0.9, min_bins=2)
+    assert merges["n_muons"] == 0
+    assert np.allclose(merged.view(), np.array([1, 1]))  # type: ignore
+
+
+def test_merge_sparse_cells_2d():
+    hist = (
+        Hist.new.Var([0, 1, 2], name="n_muons", label="n_muons")
+        .Var([0, 1, 2], name="n_jets", label="n_jets")
+        .Int64()
+    )
+    hist[...] = np.array([[100, 1], [1, 100]])
+    groups, summary = merge_sparse_cells(hist, min_fraction=0.05)
+    counts = sorted(group.count for group in groups)
+    assert counts == [101, 101]
+    assert summary["min_fraction"] == pytest.approx(0.5)
+    assert summary["max_fraction"] == pytest.approx(0.5)

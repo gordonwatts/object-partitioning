@@ -2,6 +2,12 @@
 
 Goal: {extended version of what we are trying to accomplish}
 
+## Context Snapshot
+
+This section is updated at the end of each sub-goal. It should contain enough information so no important context is lost if starting from scratch.
+
+{info}
+
 ## Constraints
 
 Be sure to always obey the following constraints as you formulate and execute the steps.

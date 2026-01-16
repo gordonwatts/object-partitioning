@@ -113,13 +113,29 @@ def apply_tail_caps(
     return ak.zip(capped, depth_limit=1), caps
 
 
+class MergedCellGroup(BaseModel):
+    cells: List[Dict[str, int]]
+    count: int
+    fraction: float
+
+
+class MergedCells(BaseModel):
+    min_fraction: float
+    groups: List[MergedCellGroup]
+
+
 class BinBoundaries(BaseModel):
     axes: Dict[str, List[int]]
+    merged_cells: Optional[MergedCells] = None
 
 
-def write_bin_boundaries_yaml(boundaries: Dict[str, List[int]], file_path: str) -> None:
+def write_bin_boundaries_yaml(
+    boundaries: Dict[str, List[int]],
+    file_path: str,
+    merged_cells: Optional[MergedCells] = None,
+) -> None:
     """Write the bin boundaries to ``file_path`` in YAML format."""
-    data = BinBoundaries(axes=boundaries)
+    data = BinBoundaries(axes=boundaries, merged_cells=merged_cells)
     with open(file_path, "w") as f:
         yaml.safe_dump(data.model_dump(), f)
 
@@ -154,6 +170,101 @@ def build_nd_histogram(data: ak.Array, boundaries: Dict[str, List[int]]) -> Base
 
     return h
 
+
+def histogram_boundaries(hist: BaseHist) -> Dict[str, List[int]]:
+    """Extract axis boundaries from a histogram."""
+    boundaries: Dict[str, List[int]] = {}
+    for ax in hist.axes:
+        name = ax.name if ax.name is not None else ""
+        edges = np.asarray(ax.edges)
+        boundaries[name] = [int(edge) for edge in edges.tolist()]
+    return boundaries
+
+
+def _merge_group_sizes(
+    counts: np.ndarray,
+    min_fraction: float,
+    min_bins: int,
+) -> List[int]:
+    total = int(counts.sum())
+    n_bins = int(counts.size)
+    if total == 0 or n_bins <= min_bins or min_fraction <= 0.0:
+        return [1] * n_bins
+
+    group_sizes = [1] * n_bins
+    counts_list = counts.astype(int).tolist()
+    while len(counts_list) > min_bins:
+        fractions = [c / total for c in counts_list]
+        if min(fractions) >= min_fraction:
+            break
+        idx = int(np.argmin(counts_list))
+        if len(counts_list) == 1:
+            break
+        if idx == 0:
+            neighbor = 1
+        elif idx == len(counts_list) - 1:
+            neighbor = idx - 1
+        else:
+            neighbor = idx - 1 if counts_list[idx - 1] <= counts_list[idx + 1] else idx + 1
+        if neighbor < idx:
+            counts_list[neighbor] += counts_list[idx]
+            group_sizes[neighbor] += group_sizes[idx]
+            del counts_list[idx]
+            del group_sizes[idx]
+        else:
+            counts_list[idx] += counts_list[neighbor]
+            group_sizes[idx] += group_sizes[neighbor]
+            del counts_list[neighbor]
+            del group_sizes[neighbor]
+    return group_sizes
+
+
+def merge_sparse_bins(
+    hist: BaseHist,
+    min_fraction: float,
+    min_bins: int = 1,
+) -> Tuple[BaseHist, Dict[str, int]]:
+    """Merge adjacent bins with low marginal fractions along each axis."""
+    if not 0.0 <= min_fraction <= 1.0:
+        raise ValueError("min_fraction must be between 0 and 1.")
+    if min_bins < 1:
+        raise ValueError("min_bins must be >= 1.")
+
+    counts = np.asarray(hist.view())
+    axes = list(hist.axes)
+    merges: Dict[str, int] = {}
+    edges_by_axis = [np.asarray(ax.edges) for ax in axes]
+
+    for axis_idx, axis in enumerate(axes):
+        if counts.size == 0:
+            merges[axis.name or f"axis_{axis_idx}"] = 0
+            continue
+        axis_counts = counts.sum(
+            axis=tuple(i for i in range(counts.ndim) if i != axis_idx)
+        )
+        group_sizes = _merge_group_sizes(axis_counts, min_fraction, min_bins)
+        if len(group_sizes) == counts.shape[axis_idx]:
+            merges[axis.name or f"axis_{axis_idx}"] = 0
+            continue
+        merges[axis.name or f"axis_{axis_idx}"] = (
+            counts.shape[axis_idx] - len(group_sizes)
+        )
+        starts = np.cumsum([0] + group_sizes[:-1])
+        counts = np.add.reduceat(counts, starts, axis=axis_idx)
+        cumulative = np.cumsum(group_sizes)
+        new_edges = [edges_by_axis[axis_idx][0]]
+        new_edges.extend(edges_by_axis[axis_idx][cumulative].tolist())
+        edges_by_axis[axis_idx] = np.asarray(new_edges)
+
+    h_builder = Hist.new
+    for axis, edges in zip(axes, edges_by_axis):
+        name = axis.name if axis.name is not None else ""
+        label = axis.label if axis.label is not None else name
+        h_builder = h_builder.Var(edges.tolist(), name=name, label=label)
+    h_builder = h_builder.Int64()  # type: ignore
+    merged_hist = h_builder
+    merged_hist[...] = counts
+    return merged_hist, merges
 
 def write_histogram_pickle(hist: BaseHist, file_path: str) -> None:
     """Persist the histogram to disk using :mod:`pickle`.
@@ -231,25 +342,136 @@ def print_bin_table(records: List[Dict[str, object]], title: str) -> None:
 
 def histogram_summary(hist: BaseHist) -> Dict[str, float]:
     """Return summary stats for the histogram."""
-    counts = np.asarray(hist.view())
-    flat = counts.flatten()
-    total = int(flat.sum())
+    counts = np.asarray(hist.view()).flatten()
+    return _summary_from_counts(counts)
+
+
+def _summary_from_counts(counts: np.ndarray) -> Dict[str, float]:
+    total = int(counts.sum())
     if total == 0:
         return {
             "max_fraction": 0.0,
             "min_fraction": 0.0,
             "min_nonzero_fraction": 0.0,
-            "zero_bins": int(flat.size),
+            "zero_bins": int(counts.size),
         }
-    fractions = flat.astype(float) / float(total)
+    fractions = counts.astype(float) / float(total)
     max_fraction = float(fractions.max())
     min_fraction = float(fractions.min())
-    nonzero = fractions[flat > 0]
+    nonzero = fractions[counts > 0]
     min_nonzero_fraction = float(nonzero.min()) if nonzero.size > 0 else 0.0
-    zero_bins = int(np.count_nonzero(flat == 0))
+    zero_bins = int(np.count_nonzero(counts == 0))
     return {
         "max_fraction": max_fraction,
         "min_fraction": min_fraction,
         "min_nonzero_fraction": min_nonzero_fraction,
         "zero_bins": zero_bins,
     }
+
+
+def _adjacent_cells(index: Tuple[int, ...], shape: Tuple[int, ...]) -> List[Tuple[int, ...]]:
+    neighbors: List[Tuple[int, ...]] = []
+    for axis, size in enumerate(shape):
+        for delta in (-1, 1):
+            next_idx = list(index)
+            next_idx[axis] += delta
+            if 0 <= next_idx[axis] < size:
+                neighbors.append(tuple(next_idx))
+    return neighbors
+
+
+def merge_sparse_cells(
+    hist: BaseHist,
+    min_fraction: float,
+) -> Tuple[List[MergedCellGroup], Dict[str, float]]:
+    """Merge adjacent n-D cells into groups until the minimum fraction is met."""
+    if not 0.0 <= min_fraction <= 1.0:
+        raise ValueError("min_fraction must be between 0 and 1.")
+
+    counts = np.asarray(hist.view())
+    shape = counts.shape
+    flat = counts.flatten()
+    total = int(flat.sum())
+    if counts.size == 0:
+        return [], _summary_from_counts(flat)
+
+    axes_names = [
+        ax.name if ax.name is not None else f"axis_{i}" for i, ax in enumerate(hist.axes)
+    ]
+    cells = list(np.ndindex(shape))
+    groups: Dict[int, Dict[str, object]] = {}
+    cell_to_group: Dict[Tuple[int, ...], int] = {}
+    for gid, cell in enumerate(cells):
+        groups[gid] = {"cells": {cell}, "count": int(counts[cell])}
+        cell_to_group[cell] = gid
+
+    if total == 0 or min_fraction <= 0.0:
+        group_records = _build_group_records(groups, axes_names, total)
+        summary = _summary_from_counts(
+            np.array([record.count for record in group_records], dtype=int)
+        )
+        return group_records, summary
+
+    def group_fraction(count: int) -> float:
+        return 0.0 if total == 0 else float(count) / float(total)
+
+    while True:
+        sparse_groups = [
+            gid
+            for gid, info in groups.items()
+            if group_fraction(int(info["count"])) < min_fraction
+        ]
+        if not sparse_groups:
+            break
+        gid = min(
+            sparse_groups,
+            key=lambda g: (int(groups[g]["count"]), g),
+        )
+        neighbor_groups: set[int] = set()
+        for cell in groups[gid]["cells"]:
+            for neighbor in _adjacent_cells(cell, shape):
+                neighbor_groups.add(cell_to_group[neighbor])
+        neighbor_groups.discard(gid)
+        if not neighbor_groups:
+            break
+        neighbor = min(
+            neighbor_groups,
+            key=lambda g: (int(groups[g]["count"]), g),
+        )
+        groups[gid]["cells"].update(groups[neighbor]["cells"])
+        groups[gid]["count"] = int(groups[gid]["count"]) + int(
+            groups[neighbor]["count"]
+        )
+        for cell in groups[neighbor]["cells"]:
+            cell_to_group[cell] = gid
+        del groups[neighbor]
+
+    group_records = _build_group_records(groups, axes_names, total)
+    summary = _summary_from_counts(
+        np.array([record.count for record in group_records], dtype=int)
+    )
+    return group_records, summary
+
+
+def _build_group_records(
+    groups: Dict[int, Dict[str, object]],
+    axes_names: List[str],
+    total: int,
+) -> List[MergedCellGroup]:
+    records: List[MergedCellGroup] = []
+    sorted_groups = sorted(
+        groups.values(),
+        key=lambda info: sorted(info["cells"])[0],
+    )
+    for info in sorted_groups:
+        cell_list = []
+        for cell in sorted(info["cells"]):
+            cell_list.append(
+                {axis: int(cell[idx]) for idx, axis in enumerate(axes_names)}
+            )
+        count = int(info["count"])
+        fraction = 0.0 if total == 0 else float(count) / float(total)
+        records.append(
+            MergedCellGroup(cells=cell_list, count=count, fraction=fraction)
+        )
+    return records

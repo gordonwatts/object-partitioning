@@ -1,4 +1,5 @@
 from typing import Dict, List, Optional, Tuple
+import numpy as np
 import awkward as ak
 import typer
 from hist import BaseHist
@@ -9,6 +10,10 @@ from atlas_object_partitioning.histograms import (
     build_nd_histogram,
     compute_bin_boundaries,
     histogram_summary,
+    histogram_boundaries,
+    MergedCells,
+    merge_sparse_bins,
+    merge_sparse_cells,
     print_bin_table,
     top_bins,
     write_bin_boundaries_yaml,
@@ -253,6 +258,21 @@ def main(
         "--tail-cap-quantile",
         help="Cap per-axis counts at this quantile (0-1] before binning.",
     ),
+    merge_min_fraction: Optional[float] = typer.Option(
+        None,
+        "--merge-min-fraction",
+        help="Minimum marginal bin fraction per axis; bins below are merged with neighbors.",
+    ),
+    merge_min_bins: int = typer.Option(
+        1,
+        "--merge-min-bins",
+        help="Minimum bins allowed per axis when merging sparse bins.",
+    ),
+    merge_cell_min_fraction: Optional[float] = typer.Option(
+        None,
+        "--merge-cell-min-fraction",
+        help="Minimum fraction for merged n-D grid cells; sparse adjacent cells are grouped.",
+    ),
 ):
     """Use counts of PHYSLITE objects in a rucio dataset to determine skim binning.
 
@@ -298,6 +318,12 @@ def main(
         raise typer.BadParameter("--target-bins-min must be >= 1.")
     if target_bins_max < target_bins_min:
         raise typer.BadParameter("--target-bins-max must be >= --target-bins-min.")
+    if merge_min_fraction is not None and not 0.0 <= merge_min_fraction <= 1.0:
+        raise typer.BadParameter("--merge-min-fraction must be between 0 and 1.")
+    if merge_min_bins < 1:
+        raise typer.BadParameter("--merge-min-bins must be >= 1.")
+    if merge_cell_min_fraction is not None and not 0.0 <= merge_cell_min_fraction <= 1.0:
+        raise typer.BadParameter("--merge-cell-min-fraction must be between 0 and 1.")
 
     counts_for_bins = counts
     tail_caps: Dict[str, int] = {}
@@ -397,7 +423,50 @@ def main(
             hist = build_nd_histogram(counts_for_bins, simple_boundaries)
             summary = histogram_summary(hist)
 
-    write_bin_boundaries_yaml(simple_boundaries, "bin_boundaries.yaml")
+    if merge_min_fraction is not None:
+        hist, merges = merge_sparse_bins(
+            hist,
+            min_fraction=merge_min_fraction,
+            min_bins=merge_min_bins,
+        )
+        simple_boundaries = histogram_boundaries(hist)
+        merge_summary = ", ".join(
+            f"{axis}={merges[axis]}" for axis in sorted(merges)
+        )
+        typer.echo(
+            "Merged sparse bins (min fraction "
+            f"{merge_min_fraction:.3f}, min bins {merge_min_bins}): {merge_summary}"
+        )
+        summary = histogram_summary(hist)
+
+    merged_cells: Optional[MergedCells] = None
+    merged_summary: Optional[Dict[str, float]] = None
+    if merge_cell_min_fraction is not None:
+        total_cells = int(np.asarray(hist.view()).size)
+        merged_groups, merged_summary = merge_sparse_cells(
+            hist,
+            min_fraction=merge_cell_min_fraction,
+        )
+        combined_cells = total_cells - len(merged_groups)
+        merged_cells = MergedCells(
+            min_fraction=merge_cell_min_fraction,
+            groups=merged_groups,
+        )
+        typer.echo(
+            "Merged cell summary: "
+            f"total cells {total_cells:,}, combined {combined_cells:,}, "
+            f"groups {len(merged_groups):,}, "
+            f"max fraction {merged_summary['max_fraction']:.3f}, "
+            f"min fraction {merged_summary['min_fraction']:.3f}, "
+            f"min nonzero fraction {merged_summary['min_nonzero_fraction']:.3f}, "
+            f"zero groups {merged_summary['zero_bins']:,}"
+        )
+
+    write_bin_boundaries_yaml(
+        simple_boundaries,
+        "bin_boundaries.yaml",
+        merged_cells=merged_cells,
+    )
     write_histogram_pickle(hist, "histogram.pkl")
 
     top = top_bins(hist, n=10)

@@ -45,6 +45,50 @@ atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.P
   --target-bins-min 3 --target-bins-max 3
 ```
 
+Sparse-bin merging optionally merges adjacent bins per axis after building the
+histogram. It uses marginal counts for each axis and repeatedly merges the
+smallest bins into their nearest neighbor until each marginal bin fraction
+meets the threshold or the axis hits the minimum bin count.
+
+Sparse-bin merging examples:
+
+```bash
+# Merge marginal bins below 1% along each axis, keep at least 2 bins per axis
+atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  -n 50 --ignore-axes met --bins-per-axis 3 --merge-min-fraction 0.01 \
+  --merge-min-bins 2
+
+# Combine target scan with a stricter merge threshold
+atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  -n 50 --ignore-axes met --target-min-fraction 0.0 --target-max-fraction 1.0 \
+  --target-bins-min 3 --target-bins-max 3 --merge-min-fraction 0.05 \
+  --merge-min-bins 2
+```
+
+Adjacent grid-cell merging groups sparse n-D cells (sharing a face) without
+changing the bin boundaries. The merged groups are written to
+`bin_boundaries.yaml`, and the CLI prints a merged-cell summary with the total
+grid cells, how many were combined, and the final group count.
+
+`bin_boundaries.yaml` schema:
+
+- `axes`: map of axis name to list of bin edges (inclusive lower, exclusive upper).
+- `merged_cells`: optional summary of merged n-D cell groups when
+  `--merge-cell-min-fraction` is used.
+  - `min_fraction`: the fraction threshold used for grouping.
+  - `groups`: list of merged groups.
+    - `cells`: list of grid cell indices, keyed by axis name (0-based).
+    - `count`: total event count in the merged group.
+    - `fraction`: total event fraction for the merged group.
+
+Adjacent grid-cell merging example:
+
+```bash
+# Merge sparse n-D cells below 1% into adjacent groups
+atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  -n 50 --ignore-axes met --bins-per-axis 3 --merge-cell-min-fraction 0.01
+```
+
 Adaptive binning examples (greedily reduces bins per axis to approach target min/max
 fractions):
 

@@ -46,3 +46,21 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-15 08:12 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --bins-per-axis 3, --tail-cap-quantile 0.98; caps n_electrons=2 n_jets=17 n_large_jets=3 n_muons=2 n_photons=7 n_taus=3; max fraction 0.039, zero bins 0 (least bins ~0.000).
 - 2026-01-15 08:13 Ran atlas-object-partitioning with -n 50, --ignore-axes met, --tail-cap-quantile 0.95, target scan 3-3 (targets 0.01/0.05); caps n_electrons=1 n_jets=14 n_large_jets=3 n_muons=2 n_photons=6 n_taus=2; max fraction 0.039, min fraction 0.000, min nonzero 0.000, zero bins 0.
 - 2026-01-15 08:13 Marked tail-capping sub-goal failed and queued post-histogram bin merging as the next sub-goal.
+- 2026-01-15 18:57 Added execution steps for the post-histogram bin merging sub-goal.
+- 2026-01-16 01:58 Reviewed histogram/binning code paths in partition.py and histograms.py to identify where a post-histogram merge could be applied.
+- 2026-01-16 02:02 Added post-histogram sparse-bin merging utilities, CLI options, and tests for merge behavior.
+- 2026-01-16 02:03 Ran atlas-object-partitioning with -n 50, --ignore-axes met, target scan 3-3, --merge-min-fraction 0.01, --merge-min-bins 2; merges 0 on all axes, max fraction 0.039, min fraction 0.000, min nonzero 0.000, zero bins 0.
+- 2026-01-16 02:03 Ran atlas-object-partitioning with -n 50, --ignore-axes met, target scan 3-3, --merge-min-fraction 0.05, --merge-min-bins 2; merges 0 on all axes, max fraction 0.039, min fraction 0.000, min nonzero 0.000, zero bins 0.
+- 2026-01-16 02:04 Marked the post-histogram bin merging sub-goal failed and reset steps for the next sub-goal.
+- 2026-01-16 02:04 Ran pytest tests/atlas_object_partitioning/test_histograms.py -k merge_sparse_bins.
+- 2026-01-16 03:37 Drafted a new sub-goal and steps for adjacent grid-cell merging with merged groups recorded in bin_boundaries.yaml.
+- 2026-01-16 03:41 Updated step 1 to define a new bin_boundaries.yaml schema without backwards-compatibility constraints.
+- 2026-01-16 03:43 Added a context snapshot and clarified configurable merge threshold in the plan.
+- 2026-01-16 03:53 Implemented adjacent grid-cell merge grouping schema, CLI option, and tests.
+- 2026-01-16 03:53 Marked steps 1-3 done for adjacent grid-cell merging plan.
+- 2026-01-16 03:54 Ran atlas-object-partitioning on baseline with -n 50, --ignore-axes met, --bins-per-axis 3, --merge-cell-min-fraction 0.01; merged cell summary: groups 64, max 0.039, min 0.010, min nonzero 0.010, zero groups 0.
+- 2026-01-16 03:55 Marked adjacent grid-cell merging sub-goal achieved and reset Steps section.
+- 2026-01-16 04:01 Added merged-cell summary totals (total cells/combined) to CLI output.
+- 2026-01-16 04:02 Ran atlas-object-partitioning with --merge-cell-min-fraction 0.01 to show total/combined cells summary (total 486, combined 422, groups 64).
+- 2026-01-16 04:03 Updated README with adjacent grid-cell merging summary details.
+- 2026-01-16 04:05 Documented bin_boundaries.yaml schema in README.
