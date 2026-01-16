@@ -54,6 +54,7 @@ When a sub-goal is finished:
 
 - Mark it as either **Acheived** or **Failed**
 - Add bullets under it to describe the result and a short summary of the work. You'll want a concise history of the the outcome of each sub-goal so you don't repeat them!
+- If changes are made to code and the README.md file for the repo tracks information like that, always make sure to update it.
 - Review the next sub-goals to make sure they still make sense.
 - Reivew the `Future Ideas` sectiont to see if there is something there that makes more sense.
 - If the next sub-goals no longer make sense, remove them, and come up with an appropriate new one.
