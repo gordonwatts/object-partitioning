@@ -69,3 +69,18 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-16 04:15 Renamed CLI main command to partition and updated README examples.
 - 2026-01-16 04:16 Added README guidance toward the adjacent grid-cell merge command.
 - 2026-01-16 04:20 Added new report-writing sub-goal and steps to the plan.
+- 2026-01-16 04:22 Re-ran baseline partition (bins-per-axis 3) for report output capture.
+- 2026-01-16 04:22 Re-ran axis override best case (n_jets=4, n_large_jets=3, n_taus=2, n_photons=2) for report output capture.
+- 2026-01-16 04:22 Re-ran target scan (bins-per-axis 2-4, targets 0.01/0.05) for report output capture.
+- 2026-01-16 04:22 Re-ran adaptive bins (min 0.01/max 0.05) for report output capture.
+- 2026-01-16 04:22 Re-ran tail-cap quantile 0.98 for report output capture.
+- 2026-01-16 04:22 Re-ran per-axis merge (min fraction 0.01, min bins 2) for report output capture.
+- 2026-01-16 04:22 Re-ran adjacent grid-cell merge (min fraction 0.01) for report output capture and describe-cells table.
+- 2026-01-16 04:28 Wrote optimize-partition-5p-report.md and marked report sub-goal achieved in the plan.
+- 2026-01-16 04:29 Updated report section wording to label greedy adjacent grid-cell merging.
+- 2026-01-16 04:45 Updated report with algorithm descriptions and describe-cells --show-values output.
+- 2026-01-16 04:53 Clarified per-axis merge terminology in report to avoid ambiguous 'marginal' wording.
+- 2026-01-16 05:01 Clarified quantile definition and target scan selection logic in report.
+- 2026-01-16 05:05 Clarified how target scan uses bins-per-axis to recompute boundaries before histogram.
+- 2026-01-16 05:07 Replaced quantile wording with percentile-based definition in report.
+- 2026-01-16 05:08 Clarified adaptive binning outcome wording in report.

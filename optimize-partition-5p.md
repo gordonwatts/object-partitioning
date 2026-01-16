@@ -11,6 +11,7 @@ This section is updated at the end of each sub-goal. It should contain enough in
 - Adjacent n-D grid-cell merging is implemented via `--merge-cell-min-fraction`; it groups neighboring cells while preserving original boundaries.
 - `bin_boundaries.yaml` now includes `merged_cells` with per-group cell indices, counts, and fractions (schema change).
 - Baseline run with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, `--merge-cell-min-fraction 0.01` produced merged-group max 0.039 and min 0.010 (64 groups, zero groups 0).
+- Report documenting all attempts and best outputs is in `optimize-partition-5p-report.md`.
 
 ## Constraints
 
@@ -56,19 +57,16 @@ Sub-Goals marked as `**Achieved**` are finished.
 7. **Achieved** Draft adjacent grid-cell merging that preserves the grid definition but merges sparse neighboring cells; output merge groups in `bin_boundaries.yaml`.
    - Added `--merge-cell-min-fraction` to group adjacent n-D cells without altering boundaries; YAML now records merged groups.
    - Baseline run with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, `--merge-cell-min-fraction 0.01` yielded merged-group min fraction 0.010 and max 0.039 (64 groups, zero groups 0).
-8. Write a report summarizing the problem, each attempted approach, and the best result for each (with commands and outputs), ending with the adjacent grid-cell merge results and a `describe-cells` table.
+8. **Achieved** Write a report summarizing the problem, each attempted approach, and the best result for each (with commands and outputs), ending with the adjacent grid-cell merge results and a `describe-cells` table.
+   - Wrote `optimize-partition-5p-report.md` with introduction and per-approach sections, including rerun outputs and final merged-cell table.
 
 ## Steps
 
 Steps marked as `**Done**` are finished, others are ready to be addressed in order.
 
-Current sub-goal: Write a report summarizing the problem, each attempted approach, and the best result for each (with commands and outputs), ending with the adjacent grid-cell merge results and a `describe-cells` table.
+Current sub-goal: TBD.
 
-1. Decide report location/name and add it to the plan (default to a top-level markdown file if none exists).
-2. Identify the best run outputs for each attempted approach from `optimize-partition-5p-log.md`; note any missing runs or outputs.
-3. Re-run any missing best configurations to capture outputs and include full command lines.
-4. Draft the report in markdown with an introduction and per-approach sections; include the best output for each section.
-5. End the report with the adjacent grid-cell merge command and include `describe-cells` table output.
+1. (Add steps for the next sub-goal here.)
 
 ## Future Ideas
 
