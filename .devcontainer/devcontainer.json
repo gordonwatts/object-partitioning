@@ -1,0 +1,66 @@
+{
+    "name": "Atlas Object Partitioning Dev Container",
+    "build": {
+        "dockerfile": "Dockerfile",
+        "context": ".."
+    },
+    "remoteUser": "vscode",
+    // Copy servicex.yaml from local dir or home dir before container starts
+    "initializeCommand": "powershell -Command \"New-Item -ItemType Directory -Force -Path './.devcontainer' | Out-Null; if ((Test-Path './servicex.yaml' -PathType Leaf)) { Get-Content './servicex.yaml' | Set-Content './.devcontainer/.servicex.yaml.tmp' } elseif ((Test-Path (Join-Path $HOME 'servicex.yaml') -PathType Leaf)) { Get-Content (Join-Path $HOME 'servicex.yaml') | Set-Content './.devcontainer/.servicex.yaml.tmp' } else { Write-Host 'Warning: servicex.yaml not found in local directory or home directory' }\"",
+    // Mount servicex.yaml (from temp copy) as read-only secret and add pip cache volume
+    "mounts": [
+        "source=${localWorkspaceFolder}/.devcontainer/.servicex.yaml.tmp,target=/workspaces/servicex.yaml,type=bind,readonly",
+        "source=atlas-object-partitioning-pip-cache,target=/home/vscode/.cache/pip,type=volume"
+    ],
+    // Install Python package in editable mode with test dependencies after container creation
+    "postCreateCommand": "pip install --user -e '.[test]'",
+    "postStartCommand": "python --version && node --version && npm list -g --depth=0 @openai/codex",
+    "customizations": {
+        "vscode": {
+            "extensions": [
+                "ms-python.python",
+                "ms-python.vscode-pylance",
+                "ms-python.black-formatter",
+                "ms-python.flake8",
+                "github.copilot-chat"
+            ],
+            "settings": {
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "python.terminal.activateEnvironment": false,
+                // Testing configuration
+                "python.testing.pytestEnabled": true,
+                "python.testing.unittestEnabled": false,
+                "python.testing.pytestArgs": [
+                    "tests"
+                ],
+                // Black formatter configuration (99 character line length per project)
+                "python.formatting.provider": "none",
+                "[python]": {
+                    "editor.defaultFormatter": "ms-python.black-formatter",
+                    "editor.formatOnSave": true
+                },
+                "black-formatter.args": [
+                    "--line-length=99"
+                ],
+                // Flake8 linter configuration
+                "python.linting.enabled": true,
+                "python.linting.flake8Enabled": true,
+                "python.linting.flake8Args": [
+                    "--max-line-length=99"
+                ],
+                "terminal.integrated.defaultProfile.linux": "bash",
+                "terminal.integrated.profiles.linux": {
+                    "bash": {
+                        "path": "/bin/bash"
+                    }
+                }
+            }
+        }
+    },
+    // Forward ports if needed (none required for this project)
+    "forwardPorts": [],
+    // Features and configurations for container behavior
+    "features": {
+        "ghcr.io/devcontainers/features/github-cli:1": {}
+    }
+}

@@ -33,3 +33,9 @@ include = ["src/atlas_object_partitioning/**"]
 
 [project.scripts]
 atlas-object-partitioning = "atlas_object_partitioning.partition:app"
+
+[tool.black]
+line-length = 99
+
+[tool.flake8]
+max-line-length = 99
