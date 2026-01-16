@@ -1,17 +1,6 @@
 # 5 percent max partition, raise smallest bins to ~1%
 
-Goal: Find bin boundaries so the largest bin fraction is about 5 percent and the smallest bin fractions are on the order of ~1 percent (no ultra-sparse bins), starting from `data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697`.
-
-## Context Snapshot
-
-This section is updated at the end of each sub-goal. It should contain enough information so no important context is lost if starting from scratch.
-
-- Current histogram flow: `compute_bin_boundaries` -> `build_nd_histogram` -> `histogram_summary` in `src/atlas_object_partitioning/partition.py`.
-- Per-axis sparse-bin merging already exists and is wired into CLI (`--merge-min-fraction`, `--merge-min-bins`); it merges along marginal axes only and did not lift min fractions (0.01/0.05 thresholds had zero merges on 50 files).
-- Adjacent n-D grid-cell merging is implemented via `--merge-cell-min-fraction`; it groups neighboring cells while preserving original boundaries.
-- `bin_boundaries.yaml` now includes `merged_cells` with per-group cell indices, counts, and fractions (schema change).
-- Baseline run with `-n 50`, `--ignore-axes met`, `--bins-per-axis 3`, `--merge-cell-min-fraction 0.01` produced merged-group max 0.039 and min 0.010 (64 groups, zero groups 0).
-- Report documenting all attempts and best outputs is in `optimize-partition-5p-report.md`.
+Goal: **Achieved** Find bin boundaries so the largest bin fraction is about 5 percent and the smallest bin fractions are on the order of ~1 percent (no ultra-sparse bins), starting from `data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697`.
 
 ## Constraints
 
@@ -64,9 +53,7 @@ Sub-Goals marked as `**Achieved**` are finished.
 
 Steps marked as `**Done**` are finished, others are ready to be addressed in order.
 
-Current sub-goal: TBD.
-
-1. (Add steps for the next sub-goal here.)
+Current sub-goal: Completed.
 
 ## Future Ideas
 

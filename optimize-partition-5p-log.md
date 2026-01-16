@@ -84,3 +84,5 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-16 05:05 Clarified how target scan uses bins-per-axis to recompute boundaries before histogram.
 - 2026-01-16 05:07 Replaced quantile wording with percentile-based definition in report.
 - 2026-01-16 05:08 Clarified adaptive binning outcome wording in report.
+- 2026-01-16 05:11 Marked overall goal achieved and removed context snapshot from plan.
+- 2026-01-16 05:11 Added final status note to optimize-partition-5p-report.md.

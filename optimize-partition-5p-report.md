@@ -728,3 +728,9 @@ Output:
 │       │        │        │        │        │        │        │        │ 2)    │
 └───────┴────────┴────────┴────────┴────────┴────────┴────────┴────────┴───────┘
 ```
+
+##Final status
+
+Adjacent grid-cell merging with `--merge-cell-min-fraction 0.01`
+achieves the target (max fraction 0.039, min group fraction 0.010) while
+providing a readable merged-cell summary.
