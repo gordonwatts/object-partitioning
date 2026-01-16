@@ -9,6 +9,10 @@ A plan of research action is governed by a goal. The given goal is accomplished 
 
 The plan template can be found in this skill in `assets/plan-template.md` and if being created for the first time should be copied into the main repo and called `{goal-title}.md` where the name comes from the pity title (no spaces in the filename!).
 
+## Context Snapshot
+
+This is a scratch pad that keeps the important context about the work between sub-goals. At the end of each sub-goal, rewrite this section. It should contain enough information so that if you lost all your context nothing important would be lost.
+
 ## Constraints Section
 
 These are things you should always follow when executing the goals. For example, if there is a certain way you should always run the code (with some flags), or if you should always make sure to read a particular file, etc.
