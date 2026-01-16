@@ -2,7 +2,10 @@ from typing import Dict, List, Optional, Tuple
 import numpy as np
 import awkward as ak
 import typer
+import yaml
 from hist import BaseHist
+from rich.console import Console
+from rich.table import Table
 
 from atlas_object_partitioning.histograms import (
     apply_tail_caps,
@@ -54,6 +57,54 @@ def _parse_bins_per_axis_overrides(entries: List[str]) -> Dict[str, int]:
             )
         overrides[axis] = bins
     return overrides
+
+
+def _format_index_ranges(indices: List[int]) -> str:
+    if not indices:
+        return "-"
+    ranges: List[Tuple[int, int]] = []
+    start = indices[0]
+    end = indices[0]
+    for value in indices[1:]:
+        if value == end + 1:
+            end = value
+        else:
+            ranges.append((start, end))
+            start = value
+            end = value
+    ranges.append((start, end))
+    parts = []
+    for lo, hi in ranges:
+        if lo == hi:
+            parts.append(str(lo))
+        else:
+            parts.append(f"{lo}-{hi}")
+    return ", ".join(parts)
+
+
+def _format_index_ranges_with_edges(indices: List[int], edges: List[int]) -> str:
+    if not indices:
+        return "-"
+    ranges: List[Tuple[int, int]] = []
+    start = indices[0]
+    end = indices[0]
+    for value in indices[1:]:
+        if value == end + 1:
+            end = value
+        else:
+            ranges.append((start, end))
+            start = value
+            end = value
+    ranges.append((start, end))
+    parts = []
+    for lo, hi in ranges:
+        lo_edge = edges[lo]
+        hi_edge = edges[hi + 1]
+        if lo == hi:
+            parts.append(f"{lo} [{lo_edge}, {hi_edge})")
+        else:
+            parts.append(f"{lo}-{hi} [{lo_edge}, {hi_edge})")
+    return ", ".join(parts)
 
 
 def _score_candidate(
@@ -171,8 +222,8 @@ def _adaptive_bins_search(
     return bins_by_axis, boundaries, hist, summary
 
 
-@app.command()
-def main(
+@app.command("partition")
+def partition(
     ds_name: str = typer.Argument(..., help="Name of the dataset"),
     output_file: str = typer.Option(
         None,
@@ -486,6 +537,79 @@ def main(
             f"Histogram summary: max fraction {summary['max_fraction']:.3f}, "
             f"zero bins {summary['zero_bins']:,}"
         )
+
+
+@app.command("describe-cells")
+def describe_cells(
+    file_path: str = typer.Argument(
+        "bin_boundaries.yaml",
+        help="Path to the bin_boundaries.yaml file.",
+    ),
+    show_values: bool = typer.Option(
+        False,
+        "--show-values",
+        help="Include bin edge ranges alongside index ranges.",
+    ),
+    sort_by_size: bool = typer.Option(
+        False,
+        "--sort-by-size/--no-sort-by-size",
+        help="Sort groups by size (count) descending.",
+    ),
+) -> None:
+    """Pretty-print merged n-D cell groups from bin_boundaries.yaml."""
+    with open(file_path) as f:
+        data = yaml.safe_load(f)
+    if not isinstance(data, dict) or "axes" not in data:
+        raise typer.BadParameter(f"{file_path} does not contain axes data.")
+    axes = data["axes"]
+    if not isinstance(axes, dict):
+        raise typer.BadParameter(f"{file_path} axes entry is not a mapping.")
+    merged = data.get("merged_cells")
+    if not merged or not merged.get("groups"):
+        typer.echo("No merged cell groups found.")
+        return
+
+    groups = merged["groups"]
+    if sort_by_size:
+        groups = sorted(
+            groups,
+            key=lambda group: (
+                -int(group.get("count", 0)),
+                -float(group.get("fraction", 0.0)),
+            ),
+        )
+    axes_order = list(axes.keys())
+    table = Table(title=f"Merged cell groups ({len(groups):,})")
+    table.add_column("group", justify="right")
+    table.add_column("count", justify="right")
+    table.add_column("fraction", justify="right")
+    for axis in axes_order:
+        table.add_column(axis)
+    for idx, group in enumerate(groups, start=1):
+        cells = group.get("cells", [])
+        count = int(group.get("count", 0))
+        fraction = float(group.get("fraction", 0.0))
+        axis_indices: Dict[str, List[int]] = {axis: [] for axis in axes_order}
+        for cell in cells:
+            for axis in axes_order:
+                if axis in cell:
+                    axis_indices[axis].append(int(cell[axis]))
+        axis_parts = []
+        for axis in axes_order:
+            values = sorted(set(axis_indices[axis]))
+            if show_values:
+                axis_parts.append(
+                    _format_index_ranges_with_edges(values, axes[axis])
+                )
+            else:
+                axis_parts.append(_format_index_ranges(values))
+        table.add_row(
+            str(idx),
+            f"{count:,}",
+            f"{fraction:.3f}",
+            *axis_parts,
+        )
+    Console().print(table)
 
 
 if __name__ == "__main__":

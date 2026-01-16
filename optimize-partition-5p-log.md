@@ -64,3 +64,8 @@ Track CLI runs, settings, and summary stats (max fraction, zero-bin count) for `
 - 2026-01-16 04:02 Ran atlas-object-partitioning with --merge-cell-min-fraction 0.01 to show total/combined cells summary (total 486, combined 422, groups 64).
 - 2026-01-16 04:03 Updated README with adjacent grid-cell merging summary details.
 - 2026-01-16 04:05 Documented bin_boundaries.yaml schema in README.
+- 2026-01-16 04:09 Added describe-cells CLI subcommand and documented it in README.
+- 2026-01-16 04:12 Updated describe-cells to render a rich table and added --sort-by-size option.
+- 2026-01-16 04:15 Renamed CLI main command to partition and updated README examples.
+- 2026-01-16 04:16 Added README guidance toward the adjacent grid-cell merge command.
+- 2026-01-16 04:20 Added new report-writing sub-goal and steps to the plan.

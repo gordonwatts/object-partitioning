@@ -24,8 +24,8 @@ The following are the axes:
 - Photons (`AnalysisPhotons`)
 - MissingET (`MET_Core_AnalysisMET`) - In ATLAS,`met` is analysis dependent. This is just the first object in the `MissingET` container, with `met()` called on that object.
 
-Use `--help` to see available options. Set `--bins-per-axis` to control how many bins are
-used per axis (defaults to 4).
+Use `atlas-object-partitioning partition --help` to see available options. Set
+`--bins-per-axis` to control how many bins are used per axis (defaults to 4).
 
 Tail-capping optionally clips per-axis counts at a quantile before binning. This reduces
 long tails by replacing values above the chosen quantile with the cap value, which can
@@ -35,11 +35,11 @@ Tail-capping examples:
 
 ```bash
 # Cap each axis at the 98th percentile before building boundaries
-atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
   -n 50 --ignore-axes met --bins-per-axis 3 --tail-cap-quantile 0.98
 
 # Combine tail-capping with target scan to see summary stats
-atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
   -n 50 --ignore-axes met --tail-cap-quantile 0.95 \
   --target-min-fraction 0.01 --target-max-fraction 0.05 \
   --target-bins-min 3 --target-bins-max 3
@@ -54,12 +54,12 @@ Sparse-bin merging examples:
 
 ```bash
 # Merge marginal bins below 1% along each axis, keep at least 2 bins per axis
-atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
   -n 50 --ignore-axes met --bins-per-axis 3 --merge-min-fraction 0.01 \
   --merge-min-bins 2
 
 # Combine target scan with a stricter merge threshold
-atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
   -n 50 --ignore-axes met --target-min-fraction 0.0 --target-max-fraction 1.0 \
   --target-bins-min 3 --target-bins-max 3 --merge-min-fraction 0.05 \
   --merge-min-bins 2
@@ -81,25 +81,42 @@ grid cells, how many were combined, and the final group count.
     - `count`: total event count in the merged group.
     - `fraction`: total event fraction for the merged group.
 
+Pretty-print merged cells from the CLI:
+
+```bash
+# Summarize merged cell groups with index ranges per axis
+atlas-object-partitioning describe-cells bin_boundaries.yaml
+
+# Include bin edge ranges with the index ranges
+atlas-object-partitioning describe-cells bin_boundaries.yaml --show-values
+
+# Sort groups by size (count) descending
+atlas-object-partitioning describe-cells bin_boundaries.yaml --sort-by-size
+```
+
 Adjacent grid-cell merging example:
 
 ```bash
 # Merge sparse n-D cells below 1% into adjacent groups
-atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
   -n 50 --ignore-axes met --bins-per-axis 3 --merge-cell-min-fraction 0.01
 ```
+
+If you are trying to balance max bin fraction (~5%) with minimum group size
+(~1%), the adjacent grid-cell merge example above is the recommended starting
+point.
 
 Adaptive binning examples (greedily reduces bins per axis to approach target min/max
 fractions):
 
 ```bash
 # Baseline adaptive search targeting 1% min nonzero, 5% max fraction
-atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
   -n 50 --ignore-axes met --bins-per-axis 3 \
   --adaptive-bins --adaptive-min-fraction 0.01 --adaptive-max-fraction 0.05
 
 # Constrain the minimum bins per axis and keep explicit overrides fixed
-atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
   -n 50 --ignore-axes met --bins-per-axis 4 \
   --bins-per-axis-override n_jets=4 --bins-per-axis-override n_large_jets=4 \
   --adaptive-bins --adaptive-min-fraction 0.005 --adaptive-max-fraction 0.05 \
@@ -109,7 +126,7 @@ atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.P
 An example output:
 
 ```python
-$ atlas-object-partitioning data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 -n 10
+$ atlas-object-partitioning partition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 -n 10
 ┏━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━┳━━━━━━━━━━━━━━┳━━━━━━━┳━━━━━━━━━━┓
 ┃ n_jets     ┃ n_large_jets ┃ n_electrons ┃ n_muons    ┃ n_taus     ┃ n_photons  ┃ met          ┃ count ┃ fraction ┃
 ┡━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━╇━━━━━━━━━━━━━━╇━━━━━━━╇━━━━━━━━━━┩
@@ -183,8 +200,8 @@ You'll need a `servicex.yaml` file with a valid token to use the ServiceX backen
 
 From the **command line**.
 
-- Use `--help` to see all options
-- Specify a rucio dataset, for example, `atlas-object-partitioning mc23_13p6TeV:mc23_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYSLITE.e8514_s4369_r16083_p6697`
+- Use `atlas-object-partitioning partition --help` to see all partition options
+- Specify a rucio dataset, for example, `atlas-object-partitioning partition mc23_13p6TeV:mc23_13p6TeV.601237.PhPy8EG_A14_ttbar_hdamp258p75_allhad.deriv.DAOD_PHYSLITE.e8514_s4369_r16083_p6697`
 - Use the `-n` option to specify how many files in the dataset to run over. By default 1, specify `0` to run on everything. Some datasets are quite large. Feel free to start the transform, then re-run the same command to have it pick up where it left off. See the [dashboard](https://servicex.af.uchicago.edu/dashboard) to monitor status.
 - Use `--adaptive-bins` to greedily reduce bins per axis toward target min/max fractions. Note that adaptive mode cannot be combined with `--target-min-fraction` or `--target-max-fraction`.
 
