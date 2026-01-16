@@ -94,6 +94,15 @@ atlas-object-partitioning describe-cells bin_boundaries.yaml --show-values
 atlas-object-partitioning describe-cells bin_boundaries.yaml --sort-by-size
 ```
 
+Update merged cell counts using an existing binning and merged-cell grouping
+(the input YAML must already contain `merged_cells.groups`), e.g. when the
+binning was defined on a smaller scan but you want counts from a larger scan:
+
+```bash
+atlas-object-partitioning repartition data18_13TeV:data18_13TeV.periodAllYear.physics_Main.PhysCont.DAOD_PHYSLITE.grp18_v01_p6697 \
+  bin_boundaries.yaml -n 500 -o bin_boundaries.repartition.yaml
+```
+
 Adjacent grid-cell merging example:
 
 ```bash

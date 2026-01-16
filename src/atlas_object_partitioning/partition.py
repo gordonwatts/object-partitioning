@@ -14,6 +14,7 @@ from atlas_object_partitioning.histograms import (
     compute_bin_boundaries,
     histogram_summary,
     histogram_boundaries,
+    MergedCellGroup,
     MergedCells,
     merge_sparse_bins,
     merge_sparse_cells,
@@ -57,6 +58,92 @@ def _parse_bins_per_axis_overrides(entries: List[str]) -> Dict[str, int]:
             )
         overrides[axis] = bins
     return overrides
+
+
+def _load_bin_boundaries_file(
+    file_path: str,
+) -> Tuple[Dict[str, List[int]], Optional[MergedCells]]:
+    try:
+        with open(file_path) as f:
+            data = yaml.safe_load(f)
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(f"{file_path} does not exist.") from exc
+    if not isinstance(data, dict) or "axes" not in data:
+        raise typer.BadParameter(f"{file_path} does not contain axes data.")
+    axes = data["axes"]
+    if not isinstance(axes, dict) or not axes:
+        raise typer.BadParameter(f"{file_path} axes entry is not a mapping.")
+    cleaned_axes: Dict[str, List[int]] = {}
+    for axis, edges in axes.items():
+        if not isinstance(axis, str) or not axis:
+            raise typer.BadParameter(f"{file_path} has an invalid axis name.")
+        if not isinstance(edges, list):
+            raise typer.BadParameter(f"{file_path} axis {axis} edges are not a list.")
+        if len(edges) < 2:
+            raise typer.BadParameter(
+                f"{file_path} axis {axis} needs at least two bin edges."
+            )
+        try:
+            cleaned_axes[axis] = [int(edge) for edge in edges]
+        except (TypeError, ValueError) as exc:
+            raise typer.BadParameter(
+                f"{file_path} axis {axis} edges must be integers."
+            ) from exc
+    merged_cells_data = data.get("merged_cells")
+    if merged_cells_data is None:
+        return cleaned_axes, None
+    if not isinstance(merged_cells_data, dict):
+        raise typer.BadParameter(f"{file_path} merged_cells entry is not a mapping.")
+    if "groups" not in merged_cells_data:
+        raise typer.BadParameter(f"{file_path} merged_cells is missing groups.")
+    try:
+        min_fraction = float(merged_cells_data.get("min_fraction", 0.0))
+    except (TypeError, ValueError) as exc:
+        raise typer.BadParameter(
+            f"{file_path} merged_cells.min_fraction must be numeric."
+        ) from exc
+    groups = merged_cells_data["groups"]
+    if not isinstance(groups, list):
+        raise typer.BadParameter(f"{file_path} merged_cells.groups must be a list.")
+    cleaned_groups: List[List[Dict[str, int]]] = []
+    for group in groups:
+        if not isinstance(group, dict) or "cells" not in group:
+            raise typer.BadParameter(
+                f"{file_path} merged_cells.groups entries must be mappings with cells."
+            )
+        cells = group["cells"]
+        if not isinstance(cells, list):
+            raise typer.BadParameter(
+                f"{file_path} merged_cells group cells must be a list."
+            )
+        cleaned_cells: List[Dict[str, int]] = []
+        for cell in cells:
+            if not isinstance(cell, dict):
+                raise typer.BadParameter(
+                    f"{file_path} merged_cells cell entries must be mappings."
+                )
+            cleaned_cell: Dict[str, int] = {}
+            for axis, value in cell.items():
+                if not isinstance(axis, str) or not axis:
+                    raise typer.BadParameter(
+                        f"{file_path} merged_cells cell axis names must be strings."
+                    )
+                try:
+                    cleaned_cell[axis] = int(value)
+                except (TypeError, ValueError) as exc:
+                    raise typer.BadParameter(
+                        f"{file_path} merged_cells cell values must be integers."
+                    ) from exc
+            cleaned_cells.append(cleaned_cell)
+        cleaned_groups.append(cleaned_cells)
+    merged_cells = MergedCells(
+        min_fraction=min_fraction,
+        groups=[
+            MergedCellGroup(cells=group, count=0, fraction=0.0)
+            for group in cleaned_groups
+        ],
+    )
+    return cleaned_axes, merged_cells
 
 
 def _format_index_ranges(indices: List[int]) -> str:
@@ -537,6 +624,106 @@ def partition(
             f"Histogram summary: max fraction {summary['max_fraction']:.3f}, "
             f"zero bins {summary['zero_bins']:,}"
         )
+
+
+@app.command("repartition")
+def repartition(
+    ds_name: str = typer.Argument(..., help="Name of the dataset"),
+    bin_boundaries_file: str = typer.Argument(
+        ..., help="Path to the existing bin_boundaries.yaml file."
+    ),
+    output_file: str = typer.Option(
+        "bin_boundaries.repartition.yaml",
+        "--output",
+        "-o",
+        help="Output file name for the updated bin_boundaries.yaml file.",
+    ),
+    n_files: int = typer.Option(
+        1,
+        "--n-files",
+        "-n",
+        help="Number of files in dataset to scan for object counts (0 for all files)",
+    ),
+    servicex_name: str = typer.Option(
+        None,
+        "--servicex-name",
+        help="Name of the ServiceX instance (default taken from `servicex.yaml` file)",
+    ),
+    ignore_cache: bool = typer.Option(
+        False,
+        "--ignore-cache",
+        help="Ignore servicex local cache and force fresh data SX query.",
+    ),
+):
+    """Update merged cell counts using an existing bin_boundaries.yaml."""
+    if output_file == bin_boundaries_file:
+        raise typer.BadParameter(
+            "--output must be different from the input bin_boundaries.yaml file."
+        )
+
+    boundaries, merged_cells = _load_bin_boundaries_file(bin_boundaries_file)
+    if merged_cells is None:
+        raise typer.BadParameter(
+            f"{bin_boundaries_file} does not contain merged cell groups to update."
+        )
+
+    counts = collect_object_counts(
+        ds_name,
+        n_files=n_files,
+        servicex_name=servicex_name,
+        ignore_local_cache=ignore_cache,
+    )
+    missing_axes = [ax for ax in boundaries if ax not in counts.fields]
+    if missing_axes:
+        raise typer.BadParameter(
+            "Input bin_boundaries.yaml references missing axes: "
+            f"{', '.join(missing_axes)}"
+        )
+
+    hist = build_nd_histogram(counts, boundaries)
+    summary = histogram_summary(hist)
+
+    counts_view = np.asarray(hist.view())
+    total = int(counts_view.sum())
+    axes_order = list(boundaries.keys())
+    merged_groups: List[MergedCellGroup] = []
+    for group in merged_cells.groups:
+        group_total = 0
+        for cell in group.cells:
+            if any(axis not in cell for axis in axes_order):
+                raise typer.BadParameter(
+                    f"{bin_boundaries_file} has cells missing axes in a group."
+                )
+            idx = tuple(int(cell[axis]) for axis in axes_order)
+            if any(
+                idx[i] < 0 or idx[i] >= counts_view.shape[i]
+                for i in range(len(idx))
+            ):
+                raise typer.BadParameter(
+                    f"{bin_boundaries_file} has out-of-range cell indices."
+                )
+            group_total += int(counts_view[idx])
+        fraction = 0.0 if total == 0 else float(group_total) / float(total)
+        merged_groups.append(
+            MergedCellGroup(cells=group.cells, count=group_total, fraction=fraction)
+        )
+    merged_cells = MergedCells(
+        min_fraction=merged_cells.min_fraction,
+        groups=merged_groups,
+    )
+
+    write_bin_boundaries_yaml(
+        boundaries,
+        output_file,
+        merged_cells=merged_cells,
+    )
+    typer.echo(
+        "Histogram summary: max fraction "
+        f"{summary['max_fraction']:.3f}, min fraction "
+        f"{summary['min_fraction']:.3f}, min nonzero fraction "
+        f"{summary['min_nonzero_fraction']:.3f}, zero bins "
+        f"{summary['zero_bins']:,}"
+    )
 
 
 @app.command("describe-cells")
