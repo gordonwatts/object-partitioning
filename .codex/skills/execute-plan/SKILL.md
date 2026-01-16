@@ -58,6 +58,7 @@ When a sub-goal is finished:
 - Review the next sub-goals to make sure they still make sense.
 - Reivew the `Future Ideas` sectiont to see if there is something there that makes more sense.
 - If the next sub-goals no longer make sense, remove them, and come up with an appropriate new one.
-- If some work suggests some other possible avenues of investigation, feel free to add them to the `Future Ideas` section.
+- If some work suggests some other possible avenues of investigation, feel free to add them to the `Future Ideas` section. Also, keep the future ideas section clean, removing things that are no relavent or have been tried (if converted to a sub-goal they should be removed immediatly).
+- Review the complete plan and make sure there is enough information so that if all context was lost you could pick up where you left off. This means updating any section called `Context Snapshot` as well.
 
 If a sub-goal involves making a choice between a few possible changes or way forward, make sure this decision is made in the steps you write. A step to acheive the sub-goal should be to write a plan for each option, another step to evaluate the options and pick one. The other choices should be moved to future ideas so they can be picked up later if needed. And then go on to modify the steps to follow the plan for the selected choice.
