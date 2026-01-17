@@ -5,7 +5,7 @@ import awkward as ak
 import numpy as np
 import yaml
 from hist import BaseHist, Hist
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 from rich.console import Console
 from rich.table import Table
 
@@ -127,15 +127,19 @@ class MergedCells(BaseModel):
 class BinBoundaries(BaseModel):
     axes: Dict[str, List[int]]
     merged_cells: Optional[MergedCells] = None
+    commands: List[str] = Field(default_factory=list)
 
 
 def write_bin_boundaries_yaml(
     boundaries: Dict[str, List[int]],
     file_path: str,
     merged_cells: Optional[MergedCells] = None,
+    commands: Optional[List[str]] = None,
 ) -> None:
     """Write the bin boundaries to ``file_path`` in YAML format."""
-    data = BinBoundaries(axes=boundaries, merged_cells=merged_cells)
+    if commands is None:
+        commands = []
+    data = BinBoundaries(axes=boundaries, merged_cells=merged_cells, commands=commands)
     with open(file_path, "w") as f:
         yaml.safe_dump(data.model_dump(), f)
 

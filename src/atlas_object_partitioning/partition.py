@@ -1,4 +1,6 @@
 from typing import Dict, List, Optional, Tuple
+import shlex
+import sys
 import numpy as np
 import awkward as ak
 import typer
@@ -62,7 +64,7 @@ def _parse_bins_per_axis_overrides(entries: List[str]) -> Dict[str, int]:
 
 def _load_bin_boundaries_file(
     file_path: str,
-) -> Tuple[Dict[str, List[int]], Optional[MergedCells]]:
+) -> Tuple[Dict[str, List[int]], Optional[MergedCells], List[str]]:
     try:
         with open(file_path) as f:
             data = yaml.safe_load(f)
@@ -89,9 +91,20 @@ def _load_bin_boundaries_file(
             raise typer.BadParameter(
                 f"{file_path} axis {axis} edges must be integers."
             ) from exc
+    commands_data = data.get("commands", [])
+    if commands_data is None:
+        commands_data = []
+    if not isinstance(commands_data, list):
+        raise typer.BadParameter(f"{file_path} commands entry is not a list.")
+    commands: List[str] = []
+    for entry in commands_data:
+        if not isinstance(entry, str):
+            raise typer.BadParameter(f"{file_path} commands entries must be strings.")
+        commands.append(entry)
+
     merged_cells_data = data.get("merged_cells")
     if merged_cells_data is None:
-        return cleaned_axes, None
+        return cleaned_axes, None, commands
     if not isinstance(merged_cells_data, dict):
         raise typer.BadParameter(f"{file_path} merged_cells entry is not a mapping.")
     if "groups" not in merged_cells_data:
@@ -143,7 +156,130 @@ def _load_bin_boundaries_file(
             for group in cleaned_groups
         ],
     )
-    return cleaned_axes, merged_cells
+    return cleaned_axes, merged_cells, commands
+
+
+def _load_bin_boundaries_usage(
+    file_path: str,
+) -> Tuple[Dict[str, List[int]], List[Dict[str, object]]]:
+    try:
+        with open(file_path) as f:
+            data = yaml.safe_load(f)
+    except FileNotFoundError as exc:
+        raise typer.BadParameter(f"{file_path} does not exist.") from exc
+    if not isinstance(data, dict) or "axes" not in data:
+        raise typer.BadParameter(f"{file_path} does not contain axes data.")
+    axes = data["axes"]
+    if not isinstance(axes, dict) or not axes:
+        raise typer.BadParameter(f"{file_path} axes entry is not a mapping.")
+    cleaned_axes: Dict[str, List[int]] = {}
+    for axis, edges in axes.items():
+        if not isinstance(axis, str) or not axis:
+            raise typer.BadParameter(f"{file_path} has an invalid axis name.")
+        if not isinstance(edges, list):
+            raise typer.BadParameter(f"{file_path} axis {axis} edges are not a list.")
+        if len(edges) < 2:
+            raise typer.BadParameter(
+                f"{file_path} axis {axis} needs at least two bin edges."
+            )
+        try:
+            cleaned_axes[axis] = [int(edge) for edge in edges]
+        except (TypeError, ValueError) as exc:
+            raise typer.BadParameter(
+                f"{file_path} axis {axis} edges must be integers."
+            ) from exc
+    merged_cells = data.get("merged_cells")
+    if not isinstance(merged_cells, dict):
+        raise typer.BadParameter(f"{file_path} does not contain merged_cells data.")
+    groups = merged_cells.get("groups")
+    if not isinstance(groups, list) or not groups:
+        raise typer.BadParameter(f"{file_path} merged_cells.groups must be a list.")
+    cleaned_groups: List[Dict[str, object]] = []
+    for group in groups:
+        if not isinstance(group, dict) or "cells" not in group:
+            raise typer.BadParameter(
+                f"{file_path} merged_cells.groups entries must be mappings with cells."
+            )
+        cells = group["cells"]
+        if not isinstance(cells, list) or not cells:
+            raise typer.BadParameter(
+                f"{file_path} merged_cells group cells must be a non-empty list."
+            )
+        try:
+            fraction = float(group["fraction"])
+        except (KeyError, TypeError, ValueError) as exc:
+            raise typer.BadParameter(
+                f"{file_path} merged_cells group fraction must be numeric."
+            ) from exc
+        if not 0.0 <= fraction <= 1.0:
+            raise typer.BadParameter(
+                f"{file_path} merged_cells group fraction must be between 0 and 1."
+            )
+        cleaned_cells: List[Dict[str, int]] = []
+        for cell in cells:
+            if not isinstance(cell, dict):
+                raise typer.BadParameter(
+                    f"{file_path} merged_cells cell entries must be mappings."
+                )
+            cleaned_cell: Dict[str, int] = {}
+            for axis, value in cell.items():
+                if not isinstance(axis, str) or not axis:
+                    raise typer.BadParameter(
+                        f"{file_path} merged_cells cell axis names must be strings."
+                    )
+                try:
+                    cleaned_cell[axis] = int(value)
+                except (TypeError, ValueError) as exc:
+                    raise typer.BadParameter(
+                        f"{file_path} merged_cells cell values must be integers."
+                    ) from exc
+            cleaned_cells.append(cleaned_cell)
+        cleaned_groups.append({"cells": cleaned_cells, "fraction": fraction})
+    return cleaned_axes, cleaned_groups
+
+
+def _calc_usage_fraction(
+    boundaries: Dict[str, List[int]],
+    merged_groups: List[Dict[str, object]],
+    cuts: Dict[str, int],
+) -> float:
+    allowed_bins_by_axis: Dict[str, set[int]] = {}
+    for axis, edges in boundaries.items():
+        n_bins = len(edges) - 1
+        if axis in cuts:
+            min_value = cuts[axis]
+            allowed_bins_by_axis[axis] = {
+                idx for idx in range(n_bins) if edges[idx + 1] > min_value
+            }
+        else:
+            allowed_bins_by_axis[axis] = set(range(n_bins))
+
+    if any(not bins for bins in allowed_bins_by_axis.values()):
+        return 0.0
+
+    usage = 0.0
+    for group in merged_groups:
+        cells = group["cells"]
+        fraction = float(group["fraction"])
+        matched = False
+        for cell in cells:
+            if any(axis not in cell for axis in boundaries):
+                raise typer.BadParameter(
+                    "Merged cell group is missing axis entries for usage calculation."
+                )
+            if any(
+                cell[axis] < 0 or cell[axis] >= len(boundaries[axis]) - 1
+                for axis in boundaries
+            ):
+                raise typer.BadParameter(
+                    "Merged cell group has out-of-range bin indices."
+                )
+            if all(cell[axis] in allowed_bins_by_axis[axis] for axis in boundaries):
+                matched = True
+                break
+        if matched:
+            usage += fraction
+    return usage
 
 
 def _format_index_ranges(indices: List[int]) -> str:
@@ -577,19 +713,21 @@ def partition(
         )
         summary = histogram_summary(hist)
 
-    merged_cells: Optional[MergedCells] = None
     merged_summary: Optional[Dict[str, float]] = None
+    effective_merge_cell_min_fraction = (
+        0.0 if merge_cell_min_fraction is None else merge_cell_min_fraction
+    )
+    total_cells = int(np.asarray(hist.view()).size)
+    merged_groups, merged_summary = merge_sparse_cells(
+        hist,
+        min_fraction=effective_merge_cell_min_fraction,
+    )
+    merged_cells = MergedCells(
+        min_fraction=effective_merge_cell_min_fraction,
+        groups=merged_groups,
+    )
     if merge_cell_min_fraction is not None:
-        total_cells = int(np.asarray(hist.view()).size)
-        merged_groups, merged_summary = merge_sparse_cells(
-            hist,
-            min_fraction=merge_cell_min_fraction,
-        )
         combined_cells = total_cells - len(merged_groups)
-        merged_cells = MergedCells(
-            min_fraction=merge_cell_min_fraction,
-            groups=merged_groups,
-        )
         typer.echo(
             "Merged cell summary: "
             f"total cells {total_cells:,}, combined {combined_cells:,}, "
@@ -604,6 +742,7 @@ def partition(
         simple_boundaries,
         "bin_boundaries.yaml",
         merged_cells=merged_cells,
+        commands=[shlex.join(sys.argv)],
     )
     write_histogram_pickle(hist, "histogram.pkl")
 
@@ -661,7 +800,7 @@ def repartition(
             "--output must be different from the input bin_boundaries.yaml file."
         )
 
-    boundaries, merged_cells = _load_bin_boundaries_file(bin_boundaries_file)
+    boundaries, merged_cells, commands = _load_bin_boundaries_file(bin_boundaries_file)
     if merged_cells is None:
         raise typer.BadParameter(
             f"{bin_boundaries_file} does not contain merged cell groups to update."
@@ -716,6 +855,7 @@ def repartition(
         boundaries,
         output_file,
         merged_cells=merged_cells,
+        commands=commands + [shlex.join(sys.argv)],
     )
     typer.echo(
         "Histogram summary: max fraction "
@@ -797,6 +937,66 @@ def describe_cells(
             *axis_parts,
         )
     Console().print(table)
+
+
+@app.command("calc_usage")
+def calc_usage(
+    bin_boundaries_file: str = typer.Argument(
+        ..., help="Path to the bin_boundaries.yaml file."
+    ),
+    n_electrons: Optional[int] = typer.Option(
+        None,
+        "--n-electrons",
+        help="Minimum number of electrons required (>= N).",
+    ),
+    n_muons: Optional[int] = typer.Option(
+        None,
+        "--n-muons",
+        help="Minimum number of muons required (>= N).",
+    ),
+    n_jets: Optional[int] = typer.Option(
+        None,
+        "--n-jets",
+        help="Minimum number of jets required (>= N).",
+    ),
+    n_large_jets: Optional[int] = typer.Option(
+        None,
+        "--n-large-jets",
+        help="Minimum number of large-R jets required (>= N).",
+    ),
+    n_photons: Optional[int] = typer.Option(
+        None,
+        "--n-photons",
+        help="Minimum number of photons required (>= N).",
+    ),
+    n_taus: Optional[int] = typer.Option(
+        None,
+        "--n-taus",
+        help="Minimum number of taus required (>= N).",
+    ),
+) -> None:
+    """Estimate dataset fraction needed to satisfy object-count cuts."""
+    boundaries, merged_groups = _load_bin_boundaries_usage(bin_boundaries_file)
+    cuts: Dict[str, int] = {}
+    for axis, value in (
+        ("n_electrons", n_electrons),
+        ("n_muons", n_muons),
+        ("n_jets", n_jets),
+        ("n_large_jets", n_large_jets),
+        ("n_photons", n_photons),
+        ("n_taus", n_taus),
+    ):
+        if value is None:
+            continue
+        if value < 0:
+            raise typer.BadParameter(f"{axis} cut must be >= 0.")
+        if axis not in boundaries:
+            raise typer.BadParameter(
+                f"{bin_boundaries_file} does not contain axis {axis}."
+            )
+        cuts[axis] = value
+    usage = _calc_usage_fraction(boundaries, merged_groups, cuts)
+    typer.echo(f"Usage fraction: {usage:.6f}")
 
 
 if __name__ == "__main__":
