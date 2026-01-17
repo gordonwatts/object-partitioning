@@ -32,7 +32,7 @@ def test_compute_bin_boundaries(tmp_path):
     write_bin_boundaries_yaml(boundaries, out_file)
     with open(out_file) as f:
         loaded = yaml.safe_load(f)
-    assert loaded == {"axes": boundaries, "merged_cells": None}
+    assert loaded == {"axes": boundaries, "merged_cells": None, "commands": []}
 
 
 def test_compute_bin_boundaries_all_zero():

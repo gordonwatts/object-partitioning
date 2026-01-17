@@ -1,4 +1,6 @@
 from typing import Dict, List, Optional, Tuple
+import shlex
+import sys
 import numpy as np
 import awkward as ak
 import typer
@@ -62,7 +64,7 @@ def _parse_bins_per_axis_overrides(entries: List[str]) -> Dict[str, int]:
 
 def _load_bin_boundaries_file(
     file_path: str,
-) -> Tuple[Dict[str, List[int]], Optional[MergedCells]]:
+) -> Tuple[Dict[str, List[int]], Optional[MergedCells], List[str]]:
     try:
         with open(file_path) as f:
             data = yaml.safe_load(f)
@@ -89,9 +91,20 @@ def _load_bin_boundaries_file(
             raise typer.BadParameter(
                 f"{file_path} axis {axis} edges must be integers."
             ) from exc
+    commands_data = data.get("commands", [])
+    if commands_data is None:
+        commands_data = []
+    if not isinstance(commands_data, list):
+        raise typer.BadParameter(f"{file_path} commands entry is not a list.")
+    commands: List[str] = []
+    for entry in commands_data:
+        if not isinstance(entry, str):
+            raise typer.BadParameter(f"{file_path} commands entries must be strings.")
+        commands.append(entry)
+
     merged_cells_data = data.get("merged_cells")
     if merged_cells_data is None:
-        return cleaned_axes, None
+        return cleaned_axes, None, commands
     if not isinstance(merged_cells_data, dict):
         raise typer.BadParameter(f"{file_path} merged_cells entry is not a mapping.")
     if "groups" not in merged_cells_data:
@@ -143,7 +156,7 @@ def _load_bin_boundaries_file(
             for group in cleaned_groups
         ],
     )
-    return cleaned_axes, merged_cells
+    return cleaned_axes, merged_cells, commands
 
 
 def _load_bin_boundaries_usage(
@@ -700,19 +713,21 @@ def partition(
         )
         summary = histogram_summary(hist)
 
-    merged_cells: Optional[MergedCells] = None
     merged_summary: Optional[Dict[str, float]] = None
+    effective_merge_cell_min_fraction = (
+        0.0 if merge_cell_min_fraction is None else merge_cell_min_fraction
+    )
+    total_cells = int(np.asarray(hist.view()).size)
+    merged_groups, merged_summary = merge_sparse_cells(
+        hist,
+        min_fraction=effective_merge_cell_min_fraction,
+    )
+    merged_cells = MergedCells(
+        min_fraction=effective_merge_cell_min_fraction,
+        groups=merged_groups,
+    )
     if merge_cell_min_fraction is not None:
-        total_cells = int(np.asarray(hist.view()).size)
-        merged_groups, merged_summary = merge_sparse_cells(
-            hist,
-            min_fraction=merge_cell_min_fraction,
-        )
         combined_cells = total_cells - len(merged_groups)
-        merged_cells = MergedCells(
-            min_fraction=merge_cell_min_fraction,
-            groups=merged_groups,
-        )
         typer.echo(
             "Merged cell summary: "
             f"total cells {total_cells:,}, combined {combined_cells:,}, "
@@ -727,6 +742,7 @@ def partition(
         simple_boundaries,
         "bin_boundaries.yaml",
         merged_cells=merged_cells,
+        commands=[shlex.join(sys.argv)],
     )
     write_histogram_pickle(hist, "histogram.pkl")
 
@@ -784,7 +800,7 @@ def repartition(
             "--output must be different from the input bin_boundaries.yaml file."
         )
 
-    boundaries, merged_cells = _load_bin_boundaries_file(bin_boundaries_file)
+    boundaries, merged_cells, commands = _load_bin_boundaries_file(bin_boundaries_file)
     if merged_cells is None:
         raise typer.BadParameter(
             f"{bin_boundaries_file} does not contain merged cell groups to update."
@@ -839,6 +855,7 @@ def repartition(
         boundaries,
         output_file,
         merged_cells=merged_cells,
+        commands=commands + [shlex.join(sys.argv)],
     )
     typer.echo(
         "Histogram summary: max fraction "
