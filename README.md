@@ -94,6 +94,17 @@ atlas-object-partitioning describe-cells bin_boundaries.yaml --show-values
 atlas-object-partitioning describe-cells bin_boundaries.yaml --sort-by-size
 ```
 
+Estimate the fraction of the dataset that must be read to satisfy object-count cuts.
+Cuts are inclusive (>= N); unspecified axes include all bins:
+
+```bash
+# Events with at least one electron
+atlas-object-partitioning calc_usage bin_boundaries.yaml --n-electrons 1
+
+# Events with at least two electrons and one muon
+atlas-object-partitioning calc_usage bin_boundaries.yaml --n-electrons 2 --n-muons 1
+```
+
 Update merged cell counts using an existing binning and merged-cell grouping
 (the input YAML must already contain `merged_cells.groups`), e.g. when the
 binning was defined on a smaller scan but you want counts from a larger scan:
